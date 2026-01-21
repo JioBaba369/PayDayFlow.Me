@@ -112,8 +112,8 @@ export function GoalForm({ onSubmit, isSubmitting, initialData }: GoalFormProps)
                     onSelect={(date) => {
                       if (date) {
                         field.onChange(date);
+                        setDatePickerOpen(false);
                       }
-                      setDatePickerOpen(false);
                     }}
                     disabled={(date) =>
                       date < new Date()

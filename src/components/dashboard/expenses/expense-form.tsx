@@ -146,10 +146,10 @@ export function ExpenseForm({ onSubmit, isSubmitting, initialData }: ExpenseForm
                     mode="single"
                     selected={field.value}
                     onSelect={(date) => {
-                      if(date) {
-                        field.onChange(date)
+                      if (date) {
+                        field.onChange(date);
+                        setDatePickerOpen(false);
                       }
-                      setDatePickerOpen(false);
                     }}
                     disabled={(date) =>
                       date > new Date() || date < new Date("2000-01-01")

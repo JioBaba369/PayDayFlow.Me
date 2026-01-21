@@ -148,8 +148,8 @@ export function BillForm({ onSubmit, isSubmitting, initialData }: BillFormProps)
                     onSelect={(date) => {
                       if (date) {
                         field.onChange(date);
+                        setDatePickerOpen(false);
                       }
-                      setDatePickerOpen(false);
                     }}
                     disabled={(date) =>
                       date < new Date("1900-01-01")
