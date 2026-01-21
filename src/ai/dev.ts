@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/financial-advice-from-insights.ts';
-import '@/ai/flows/net-worth-summary.ts';
+import '@/ai/flows/ai-powered-insights.ts';
+import '@/ai/flows/summarize-spending.ts';

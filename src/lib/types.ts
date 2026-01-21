@@ -1,49 +1,113 @@
-export interface Asset {
-  name: string;
-  value: number;
+export type UserProfile = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  userProfileId: string;
 }
 
-export interface Liability {
-  name: string;
-  value: number;
-}
-
-export interface Bill {
-  id: number;
+export type Bill = {
+  id: string;
   name: string;
   amount: number;
   dueDate: string;
   paid: boolean;
-}
+  category: 'Housing' | 'Utilities' | 'Internet' | 'Mobile' | 'Subscriptions' | 'Insurance' | 'Transport' | 'Healthcare' | 'Loan Payment' | 'Other';
+  userProfileId: string;
+};
 
-export interface Budget {
+export type BudgetDoc = {
+  id: string;
   category: string;
-  amount: number;
-}
+  allocated: number;
+  userProfileId: string;
+};
 
-export interface SavingsGoal {
-  id: number;
+export type Budget = {
+  id: string;
+  category: string;
+  allocated: number;
+  spent: number;
+};
+
+export type Expense = {
+  id: string;
+  category: string;
+  description: string;
+  amount: number;
+  date: string;
+  userProfileId: string;
+};
+
+export type SavingsGoal = {
+  id: string;
   name: string;
   targetAmount: number;
   currentAmount: number;
+  targetDate?: string;
+  userProfileId: string;
+};
+
+export type Asset = {
+  id: string;
+  name: string;
+  value: number;
+  type: 'Cash' | 'Investment' | 'Property' | 'Other';
+  userProfileId: string;
+};
+
+export type Liability = {
+  id: string;
+  name: string;
+  value: number;
+  type: 'Loan' | 'Credit Card' | 'Mortgage' | 'Other';
+  userProfileId: string;
+};
+
+export type NetWorth = {
+  id: string;
+  date: string;
+  assets: number;
+  liabilities: number;
+  userProfileId: string;
 }
 
-export interface Transaction {
+export type NetWorthHistoryPoint = {
   date: string;
-  description: string;
+  netWorth: number;
+};
+
+export type IncomeStream = {
+  id: string;
+  name: string;
   amount: number;
+  schedule: 'Monthly' | 'Bi-Weekly' | 'One-Time' | 'Yearly';
+  userProfileId: string;
+};
+
+export type Transaction = {
+  id: string;
+  name: string;
+  amount: number;
+  date: string;
+  type: 'Income' | 'Expense';
   category: string;
 }
 
-export interface RunwayData {
-    runway: number;
-    burnRate: number;
-    savingsVelocity: number;
+export interface SummaryItem {
+  item: string;
+  budget: number | null;
+  actual: number;
 }
 
-export interface NetWorthHistory {
-    date: string;
-    assets: number;
-    liabilities: number;
-    netWorth: number;
+export interface AllocationItem {
+  name: string;
+  value: number;
+  fill: string;
+}
+
+export interface CashFlowChartItem {
+    name: string;
+    budget: number;
+    actual: number;
 }
