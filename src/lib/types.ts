@@ -13,7 +13,7 @@ export type Bill = {
   amount: number;
   dueDate: string;
   paid: boolean;
-  category: 'Spotify' | 'Netflix' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other';
+  category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other' | 'Spotify' | 'Netflix';
 };
 
 export type BudgetDoc = {
@@ -56,7 +56,7 @@ export type Liability = {
   id: string;
   name: string;
   value: number;
-  type: 'Loan' | 'Credit Card' | 'Mortgage' | 'Other';
+  type: 'Mortgage' | 'Auto Loan' | 'Student Loan' | 'Credit Card' | 'Personal Loan' | 'Medical Debt' | 'Loan from Friends/Family' | 'Buy Now, Pay Later' | 'Tax Debt' | 'Other';
 };
 
 export type NetWorth = {

@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Liability } from '@/lib/types';
 
-const liabilityTypes = ['Loan', 'Credit Card', 'Mortgage', 'Other'] as const;
+const liabilityTypes = ['Mortgage', 'Auto Loan', 'Student Loan', 'Credit Card', 'Personal Loan', 'Medical Debt', 'Loan from Friends/Family', 'Buy Now, Pay Later', 'Tax Debt', 'Other'] as const;
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Liability name must be at least 2 characters.' }),
