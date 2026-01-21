@@ -23,44 +23,49 @@ service cloud.firestore {
     }
 
     /* ─────────────────────────────
-       USER DATA COLLECTIONS
-       /users/{userId}/...
+       USER DATA
+       /users/{userId}
     ───────────────────────────── */
+    match /users/{userId} {
+      // This rule allows a user to read their own top-level user document.
+      // It does not grant access to the subcollections below.
+      allow get: if isOwner(userId);
 
-    // Granular rules for each user-specific collection.
-    // This ensures that a user can only access their own data,
-    // and provides clear, maintainable rules for each data type.
+      // --- USER SUBCOLLECTIONS ---
+      // These rules grant access to the documents within each subcollection.
+      // A user can only access the subcollections under their own user ID.
+      
+      match /assets/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/assets/{docId} {
-      allow read, write: if isOwner(userId);
-    }
+      match /bills/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/bills/{docId} {
-      allow read, write: if isOwner(userId);
-    }
+      match /budgets/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/budgets/{docId} {
-      allow read, write: if isOwner(userId);
-    }
+      match /expenses/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/expenses/{docId} {
-      allow read, write: if isOwner(userId);
-    }
+      match /incomeStreams/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/incomeStreams/{docId} {
-      allow read, write: if isOwner(userId);
-    }
+      match /liabilities/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/liabilities/{docId} {
-      allow read, write: if isOwner(userId);
-    }
+      match /netWorths/{docId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /users/{userId}/netWorths/{docId} {
-      allow read, write: if isOwner(userId);
-    }
-
-    match /users/{userId}/savingsGoals/{docId} {
-      allow read, write: if isOwner(userId);
+      match /savingsGoals/{docId} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }
