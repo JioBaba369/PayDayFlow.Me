@@ -58,9 +58,7 @@ export default function DashboardPage() {
     if (!ready) return undefined;
     return query(
       collection(firestore!, `users/${user!.uid}/bills`),
-      where('paid', '==', false),
-      orderBy('dueDate'),
-      limit(5)
+      where('paid', '==', false)
     );
   }, [ready, firestore, user]);
 
@@ -91,7 +89,7 @@ export default function DashboardPage() {
   }, [ready, firestore, user]);
 
   // --- DATA FETCHING (SAFE) ---
-  const {data: bills, isLoading: areBillsLoading} = useCollection<Bill>(billsQuery);
+  const {data: unpaidBills, isLoading: areBillsLoading} = useCollection<Bill>(billsQuery);
   const {data: goals, isLoading: areGoalsLoading} = useCollection<SavingsGoal>(savingsGoalsQuery);
   const {data: expenses, isLoading: areExpensesLoading} = useCollection<Expense>(expensesQuery);
   const {data: assets, isLoading: areAssetsLoading} = useCollection<Asset>(assetsQuery);
@@ -105,11 +103,30 @@ export default function DashboardPage() {
 
   // --- DERIVED DATA ---
   const recentExpenses = expenses?.slice(0, 5) ?? [];
-  const totalUpcomingBills = bills?.reduce((s, b) => s + b.amount, 0) ?? 0;
   const cashLeft = assets?.reduce((s, a) => s + a.value, 0) ?? 0;
   const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
   const spendingPace = totalMonthlySpending / (new Date().getDate());
 
+  const upcomingBills = useMemo(() => {
+    if (!unpaidBills) return [];
+    return [...unpaidBills]
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 5);
+  }, [unpaidBills]);
+
+  const totalUpcomingBills = useMemo(() => {
+    if (!unpaidBills) return 0;
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+    return unpaidBills
+      .filter(bill => {
+        const dueDate = parseISO(bill.dueDate);
+        return dueDate >= now && dueDate <= thirtyDaysFromNow;
+      })
+      .reduce((sum, bill) => sum + bill.amount, 0);
+  }, [unpaidBills]);
 
   const savingsProgress = useMemo(() => {
     if (!goals || goals.length === 0) return { current: 0, target: 0, percent: 0};
@@ -224,7 +241,7 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                           {bills && bills.length > 0 ? bills.map((bill) => {
+                           {upcomingBills && upcomingBills.length > 0 ? upcomingBills.map((bill) => {
                                 const daysUntilDue = differenceInDays(parseISO(bill.dueDate), new Date());
                                 return (
                                     <TableRow key={bill.id}>
