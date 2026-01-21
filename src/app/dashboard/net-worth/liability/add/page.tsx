@@ -13,12 +13,29 @@ export default function AddLiabilityPage() {
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
-    function handleFormSubmit(values: LiabilityFormValues) {
+    async function handleFormSubmit(values: LiabilityFormValues) {
         if (!user || !firestore) return;
         setSubmitting(true);
         
-        addDocumentNonBlocking(collection(firestore, `users/${user.uid}/liabilities`), values);
-        router.push('/dashboard/net-worth');
+        try {
+            const docRef = await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/liabilities`), values);
+            if (docRef) {
+                // After creating the liability, redirect to the 'Add Bill' page with details
+                // to prompt the user to create a corresponding recurring bill.
+                const queryParams = new URLSearchParams({
+                    liabilityId: docRef.id,
+                    name: values.name,
+                    type: values.type
+                });
+                router.push(`/dashboard/bills/add?${queryParams.toString()}`);
+            } else {
+                 router.push('/dashboard/net-worth');
+            }
+        } catch (error) {
+            console.error("Failed to add liability or redirect", error);
+            // Fallback redirect
+            router.push('/dashboard/net-worth');
+        }
     }
 
     return (

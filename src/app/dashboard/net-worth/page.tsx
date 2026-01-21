@@ -23,11 +23,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Camera, Loader2, Pencil, Download } from 'lucide-react';
+import { PlusCircle, Trash2, Camera, Loader2, Pencil, Download, Link2 } from 'lucide-react';
 import { LineChartInteractive } from '@/components/charts/line-chart-interactive';
 import { formatCurrency, exportToCsv } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
-import type { Asset, Liability, NetWorth, NetWorthHistoryPoint } from '@/lib/types';
+import type { Asset, Liability, NetWorth, NetWorthHistoryPoint, Bill } from '@/lib/types';
 import { useUser, useCollection, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, Firestore, doc, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 const snapshotFormSchema = z.object({
@@ -82,17 +83,24 @@ export default function NetWorthPage() {
   const assetsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/assets`), [firestore, user]);
   const liabilitiesQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/liabilities`), [firestore, user]);
   const netWorthQuery = useMemo(() => !user ? null : query(collection(firestore, `users/${user.uid}/netWorths`), orderBy('date', 'desc')), [firestore, user]);
+  const billsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/bills`), [firestore, user]);
 
   const { data: assets, isLoading: areAssetsLoading } = useCollection<Asset>(assetsQuery);
   const { data: liabilities, isLoading: areLiabilitiesLoading } = useCollection<Liability>(liabilitiesQuery);
   const { data: netWorthHistoryDocs, isLoading: areNetWorthsLoading } = useCollection<NetWorth>(netWorthQuery);
+  const { data: bills, isLoading: areBillsLoading } = useCollection<Bill>(billsQuery);
 
-  const isLoading = isUserLoading || areAssetsLoading || areLiabilitiesLoading || areNetWorthsLoading;
+  const isLoading = isUserLoading || areAssetsLoading || areLiabilitiesLoading || areNetWorthsLoading || areBillsLoading;
   const currency = userProfile?.currency;
 
   const totalAssets = useMemo(() => assets?.reduce((sum, asset) => sum + asset.value, 0) || 0, [assets]);
   const totalLiabilities = useMemo(() => liabilities?.reduce((sum, liability) => sum + liability.value, 0) || 0, [liabilities]);
   const currentNetWorth = totalAssets - totalLiabilities;
+
+  const linkedBillIds = useMemo(() => {
+    if (!bills) return new Set();
+    return new Set(bills.filter(bill => bill.liabilityId).map(bill => bill.liabilityId));
+  }, [bills]);
   
   const netWorthHistory: NetWorthHistoryPoint[] = useMemo(() => {
     if (!netWorthHistoryDocs) return [];
@@ -331,7 +339,19 @@ export default function NetWorthPage() {
                     ))}
                     {!isLoading && liabilities?.map((liability: Liability) => (
                       <TableRow key={liability.id}>
-                        <TableCell className="font-medium">{liability.name}</TableCell>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          {liability.name}
+                          {linkedBillIds.has(liability.id) && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Link2 className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>A recurring bill is linked to this liability.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          </TableCell>
                         <TableCell><Badge variant="outline">{liability.type}</Badge></TableCell>
                         <TableCell className="text-right">{formatCurrency(liability.value, currency)}</TableCell>
                          <TableCell>

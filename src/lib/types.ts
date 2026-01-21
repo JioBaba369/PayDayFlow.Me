@@ -15,6 +15,7 @@ export type Bill = {
   dueDate: string;
   paid: boolean;
   category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other';
+  liabilityId?: string;
 };
 
 export type BudgetDoc = {
