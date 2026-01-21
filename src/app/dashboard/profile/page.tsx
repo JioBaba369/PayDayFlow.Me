@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, Firestore } from 'firebase/firestore';
 import { ProfileForm, type ProfileFormValues } from '@/components/dashboard/profile/profile-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ProfilePictureUpdater } from '@/components/dashboard/profile/profile-picture-updater';
+import { Separator } from '@/components/ui/separator';
 
 export default function ProfilePage() {
   const { user, userProfile, isProfileLoading } = useUser();
@@ -55,7 +57,7 @@ export default function ProfilePage() {
             <CardHeader>
                 <CardTitle>My Profile</CardTitle>
                 <CardDescription>
-                    Manage your personal information.
+                    Manage your personal information and profile picture.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -70,7 +72,11 @@ export default function ProfilePage() {
                         <Skeleton className="h-10 w-full mt-2" />
                     </div>
                 ) : (
-                   <ProfileForm onSubmit={onSubmit} isSubmitting={isSubmitting} initialData={userProfile} />
+                  <div className="grid md:grid-cols-[auto_1px_1fr] gap-8 items-start">
+                    <ProfilePictureUpdater />
+                    <Separator orientation="vertical" className="hidden md:block h-auto" />
+                    <ProfileForm onSubmit={onSubmit} isSubmitting={isSubmitting} initialData={userProfile} />
+                  </div>
                 )}
             </CardContent>
         </Card>

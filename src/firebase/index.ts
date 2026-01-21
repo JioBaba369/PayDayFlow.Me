@@ -12,6 +12,7 @@ import {
   type Firestore,
   initializeFirestore,
 } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 // Define the config using environment variables, as per user's guidance
 const firebaseConfig = {
@@ -28,6 +29,7 @@ const firebaseConfig = {
 let firebaseApp: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let firestore: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
 // IMPORTANT: DO NOT MODIFY CALL SIGNATURE
 export function initializeFirebase() {
@@ -50,10 +52,15 @@ function getSdks(app: FirebaseApp) {
     });
   }
 
+  if (!storage) {
+    storage = getStorage(app);
+  }
+
   return {
     firebaseApp: app,
     auth,
     firestore,
+    storage,
   };
 }
 
