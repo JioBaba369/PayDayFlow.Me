@@ -44,7 +44,10 @@ Cash Left: {{{cashLeft}}}
 Upcoming Bills: {{{upcomingBills}}}
 Savings Progress: {{{savingsProgress}}}%
 Monthly Budget: {{{monthlyBudget}}}
-Spending Categories: {{#each spendingCategories}}{{{@key}}}: {{{this}}}, {{/each}}
+Spending Categories:
+{{#each spendingCategories}}
+- {{{@key}}}: {{{this}}}
+{{/each}}
 Net Worth: {{{netWorth}}}
 Personal Runway: {{{runway}}} months
 Burn Rate: {{{burnRate}}}
