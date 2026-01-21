@@ -24,7 +24,7 @@ export function AddMenu() {
           <Link href="/dashboard/expenses/add">Add Expense</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/bills?action=add-bill">Add Bill</Link>
+          <Link href="/dashboard/bills/add">Add Bill</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard/budget?action=add-budget">Add Budget</Link>

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useMemo } from 'react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -22,54 +22,23 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cn } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
-import { PlusCircle, Trash2, Pencil } from 'lucide-react';
-import { useUser, useCollection, updateDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { PlusCircle, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
+import { useUser, useCollection, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Bill } from '@/lib/types';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { BillForm, type BillFormValues } from '@/components/dashboard/bills/bill-form';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
 
 
 export default function BillsPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [editingBill, setEditingBill] = useState<Bill | null>(null);
-  
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (searchParams.get('action') === 'add-bill') {
-      handleOpenDialog();
-    }
-  }, [searchParams]);
-
-  const handleDialogChange = (open: boolean) => {
-    if (!open) {
-      setEditingBill(null);
-      router.replace(pathname, { scroll: false });
-    }
-    setDialogOpen(open);
-  }
 
   const billsQuery = useMemo(() => {
     if (!firestore || !user) return null;
@@ -77,35 +46,6 @@ export default function BillsPage() {
   }, [firestore, user]);
 
   const { data: bills, isLoading: areBillsLoading } = useCollection<Bill>(billsQuery);
-
-  function handleOpenDialog(bill: Bill | null = null) {
-    setEditingBill(bill);
-    setDialogOpen(true);
-  }
-
-  async function handleFormSubmit(values: BillFormValues) {
-    if (!user || !firestore) return;
-    setSubmitting(true);
-    
-    const billData = {
-      ...values,
-      dueDate: values.dueDate.toISOString(),
-    };
-
-    try {
-      if (editingBill) {
-        const billRef = doc(firestore, `users/${user.uid}/bills/${editingBill.id}`);
-        await updateDocumentNonBlocking(billRef, { ...billData, paid: editingBill.paid });
-      } else {
-        await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/bills`), { ...billData, paid: false });
-      }
-      handleDialogChange(false);
-    } catch (error) {
-      console.error("Error submitting bill: ", error);
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   function handlePaidChange(bill: Bill) {
     if (!user || !firestore) return;
@@ -128,7 +68,6 @@ export default function BillsPage() {
   }, [bills]);
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <div>
@@ -137,9 +76,11 @@ export default function BillsPage() {
               Manage all your recurring and upcoming payments.
             </CardDescription>
           </div>
-          <Button onClick={() => handleOpenDialog()}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Bill
+          <Button asChild>
+            <Link href="/dashboard/bills/add">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Bill
+            </Link>
           </Button>
         </CardHeader>
         <CardContent>
@@ -199,12 +140,14 @@ export default function BillsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <DropdownMenuItem onClick={() => handleOpenDialog(bill)}>
-                          <Pencil className="h-4 w-4" />
-                          Edit
+                         <DropdownMenuItem asChild>
+                           <Link href={`/dashboard/bills/edit/${bill.id}`}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDeleteBill(bill.id)} className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -223,15 +166,5 @@ export default function BillsPage() {
           </Table>
         </CardContent>
       </Card>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{editingBill ? 'Edit Bill' : 'Add a New Bill'}</DialogTitle>
-          <DialogDescription>
-           {editingBill ? 'Update the details for your recurring payment.' : 'Enter the details for your recurring payment.'}
-          </DialogDescription>
-        </DialogHeader>
-        <BillForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingBill} />
-      </DialogContent>
-    </Dialog>
   );
 }
