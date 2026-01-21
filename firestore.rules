@@ -7,7 +7,7 @@ service cloud.firestore {
        /userProfiles/{userId}
     ───────────────────────────── */
     match /userProfiles/{userId} {
-      allow get, create, update: if request.auth != null && request.auth.uid == userId;
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
       allow delete: if false;
     }
 
