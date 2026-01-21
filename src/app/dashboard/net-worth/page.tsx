@@ -23,9 +23,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Camera, Loader2, Pencil } from 'lucide-react';
+import { PlusCircle, Trash2, Camera, Loader2, Pencil, Download } from 'lucide-react';
 import { LineChartInteractive } from '@/components/charts/line-chart-interactive';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, exportToCsv } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import type { Asset, Liability, NetWorth, NetWorthHistoryPoint } from '@/lib/types';
 import { useUser, useCollection, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
@@ -137,6 +137,38 @@ export default function NetWorthPage() {
     });
   }
 
+  function handleExportSnapshots() {
+    if (!netWorthHistoryDocs || netWorthHistoryDocs.length === 0) return;
+    const dataToExport = netWorthHistoryDocs.map(snapshot => ({
+        date: format(parseISO(snapshot.date), 'yyyy-MM-dd'),
+        name: snapshot.name,
+        assets: snapshot.assets,
+        liabilities: snapshot.liabilities,
+        net_worth: snapshot.assets - snapshot.liabilities,
+    }));
+    exportToCsv('net-worth-snapshots.csv', dataToExport);
+  }
+
+  function handleExportAssets() {
+    if (!assets || assets.length === 0) return;
+    const dataToExport = assets.map(asset => ({
+        name: asset.name,
+        type: asset.type,
+        value: asset.value,
+    }));
+    exportToCsv('assets.csv', dataToExport);
+  }
+
+  function handleExportLiabilities() {
+    if (!liabilities || liabilities.length === 0) return;
+    const dataToExport = liabilities.map(liability => ({
+        name: liability.name,
+        type: liability.type,
+        value: liability.value,
+    }));
+    exportToCsv('liabilities.csv', dataToExport);
+  }
+
   return (
       <Dialog open={isSnapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
         <div className="grid auto-rows-max items-start gap-4 md:gap-8">
@@ -174,9 +206,15 @@ export default function NetWorthPage() {
               }
             />
              <Card>
-                <CardHeader>
-                <CardTitle>Snapshot History</CardTitle>
-                <CardDescription>A record of your previous net worth snapshots.</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Snapshot History</CardTitle>
+                    <CardDescription>A record of your previous net worth snapshots.</CardDescription>
+                  </div>
+                   <Button variant="outline" size="sm" onClick={handleExportSnapshots} disabled={!netWorthHistoryDocs || netWorthHistoryDocs.length === 0}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export
+                  </Button>
                 </CardHeader>
                 <CardContent>
                 <Table>
@@ -218,7 +256,13 @@ export default function NetWorthPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Assets</CardTitle>
-                <Button asChild variant="outline" size="sm"><Link href="/dashboard/net-worth/asset/add"><PlusCircle className="mr-2 h-4 w-4" /> Add Asset</Link></Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleExportAssets} disabled={!assets || assets.length === 0}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export
+                    </Button>
+                    <Button asChild variant="outline" size="sm"><Link href="/dashboard/net-worth/asset/add"><PlusCircle className="mr-2 h-4 w-4" /> Add Asset</Link></Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -263,7 +307,13 @@ export default function NetWorthPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Liabilities</CardTitle>
-                <Button asChild variant="outline" size="sm"><Link href="/dashboard/net-worth/liability/add"><PlusCircle className="mr-2 h-4 w-4" /> Add Liability</Link></Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleExportLiabilities} disabled={!liabilities || liabilities.length === 0}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export
+                    </Button>
+                    <Button asChild variant="outline" size="sm"><Link href="/dashboard/net-worth/liability/add"><PlusCircle className="mr-2 h-4 w-4" /> Add Liability</Link></Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
