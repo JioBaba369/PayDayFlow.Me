@@ -29,7 +29,6 @@ const navItems = [
   { href: '/dashboard/savings', icon: Target, label: 'Savings' },
   { href: '/dashboard/net-worth', icon: TrendingUp, label: 'Net Worth' },
   { href: '/dashboard/runway', icon: Plane, label: 'Runway' },
-  { href: '/dashboard/insights', icon: Sparkles, label: 'Insights' },
   { href: '/dashboard/profile', icon: User, label: 'Profile' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
