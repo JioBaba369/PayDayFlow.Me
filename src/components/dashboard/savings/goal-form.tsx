@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import type { SavingsGoal } from '@/lib/types';
+import { DatePickerPresets } from '@/components/ui/date-picker-presets';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -39,6 +41,7 @@ type GoalFormProps = {
 };
 
 export function GoalForm({ onSubmit, isSubmitting, initialData }: GoalFormProps) {
+  const [datePickerOpen, setDatePickerOpen] = React.useState(false);
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -83,7 +86,7 @@ export function GoalForm({ onSubmit, isSubmitting, initialData }: GoalFormProps)
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Target Date (Optional)</FormLabel>
-              <Popover>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -106,7 +109,12 @@ export function GoalForm({ onSubmit, isSubmitting, initialData }: GoalFormProps)
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      if (date) {
+                        field.onChange(date);
+                      }
+                      setDatePickerOpen(false);
+                    }}
                     disabled={(date) =>
                       date < new Date()
                     }
@@ -114,6 +122,13 @@ export function GoalForm({ onSubmit, isSubmitting, initialData }: GoalFormProps)
                     fromYear={new Date().getFullYear()}
                     toYear={new Date().getFullYear() + 20}
                     initialFocus
+                  />
+                  <DatePickerPresets
+                    presets={['3-months', '6-months', '1-year']}
+                    onSelect={(date) => {
+                        field.onChange(date);
+                        setDatePickerOpen(false);
+                    }}
                   />
                 </PopoverContent>
               </Popover>

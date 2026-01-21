@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -27,6 +28,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import type { Bill } from '@/lib/types';
+import { DatePickerPresets } from '@/components/ui/date-picker-presets';
 
 const billCategories = ['Electricity', 'Gas', 'Gym', 'Health Insurance', 'Housing', 'Internet', 'Loan Payment', 'Mobile', 'Subscriptions', 'Water', 'Other'] as const;
 
@@ -52,6 +54,7 @@ type BillFormProps = {
 };
 
 export function BillForm({ onSubmit, isSubmitting, initialData }: BillFormProps) {
+  const [datePickerOpen, setDatePickerOpen] = React.useState(false);
   const form = useForm<BillFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -119,7 +122,7 @@ export function BillForm({ onSubmit, isSubmitting, initialData }: BillFormProps)
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Due Date</FormLabel>
-              <Popover>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -142,13 +145,25 @@ export function BillForm({ onSubmit, isSubmitting, initialData }: BillFormProps)
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      if (date) {
+                        field.onChange(date);
+                      }
+                      setDatePickerOpen(false);
+                    }}
                     disabled={(date) =>
                       date < new Date("1900-01-01")
                     }
                     fromYear={1900}
                     toYear={new Date().getFullYear() + 10}
                     initialFocus
+                  />
+                  <DatePickerPresets
+                    presets={['7-days', '30-days', 'next-month']}
+                    onSelect={(date) => {
+                        field.onChange(date);
+                        setDatePickerOpen(false);
+                    }}
                   />
                 </PopoverContent>
               </Popover>
