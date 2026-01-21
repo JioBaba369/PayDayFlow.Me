@@ -3,40 +3,35 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExpenseForm, type ExpenseFormValues } from '@/components/dashboard/expenses/expense-form';
+import { AssetForm, type AssetFormValues } from '@/components/dashboard/net-worth/asset-form';
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking } from '@/firebase';
 import { doc, Firestore } from 'firebase/firestore';
-import type { Expense } from '@/lib/types';
+import type { Asset } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function EditExpensePage({ params }: { params: { id: string }}) {
+export default function EditAssetPage({ params }: { params: { id: string }}) {
     const { user } = useUser();
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
-    const expenseRef = useMemo(() => {
+    const assetRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/expenses/${params.id}`);
+        return doc(firestore, `users/${user.uid}/assets/${params.id}`);
     }, [user, firestore, params.id]);
 
-    const { data: editingExpense, isLoading: isExpenseLoading } = useDoc<Expense>(expenseRef);
+    const { data: editingAsset, isLoading: isAssetLoading } = useDoc<Asset>(assetRef);
 
-    function handleFormSubmit(values: ExpenseFormValues) {
-        if (!user || !firestore || !editingExpense) return;
+    function handleFormSubmit(values: AssetFormValues) {
+        if (!user || !firestore || !editingAsset) return;
         setSubmitting(true);
-        
-        const expenseData = {
-          ...values,
-          date: values.date.toISOString(),
-        };
 
-        const expenseRefToUpdate = doc(firestore, `users/${user.uid}/expenses/${editingExpense.id}`);
-        updateDocumentNonBlocking(expenseRefToUpdate, expenseData);
-        router.push('/dashboard/expenses');
+        const assetRefToUpdate = doc(firestore, `users/${user.uid}/assets/${editingAsset.id}`);
+        updateDocumentNonBlocking(assetRefToUpdate, values);
+        router.push('/dashboard/net-worth');
     }
 
-    if (isExpenseLoading) {
+    if (isAssetLoading) {
         return (
              <Card className="max-w-2xl mx-auto">
                 <CardHeader>
@@ -47,18 +42,17 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
                 </CardContent>
             </Card>
         );
     }
 
-    if (!editingExpense) {
+    if (!editingAsset) {
         return (
             <Card className="max-w-2xl mx-auto">
                 <CardHeader>
-                    <CardTitle>Expense Not Found</CardTitle>
-                    <CardDescription>The expense you are trying to edit does not exist or could not be loaded.</CardDescription>
+                    <CardTitle>Asset Not Found</CardTitle>
+                    <CardDescription>The asset you are trying to edit does not exist or could not be loaded.</CardDescription>
                 </CardHeader>
             </Card>
         );
@@ -67,11 +61,11 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>Edit Expense</CardTitle>
-                <CardDescription>Update the details for this expense.</CardDescription>
+                <CardTitle>Edit Asset</CardTitle>
+                <CardDescription>Update the details for this asset.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ExpenseForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingExpense} />
+                <AssetForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingAsset} />
             </CardContent>
         </Card>
     );

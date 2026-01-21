@@ -3,38 +3,32 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BillForm, type BillFormValues } from '@/components/dashboard/bills/bill-form';
+import { IncomeStreamForm, type IncomeStreamFormValues } from '@/components/dashboard/runway/income-stream-form';
 import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection, Firestore } from 'firebase/firestore';
 
-export default function AddBillPage() {
+export default function AddIncomePage() {
     const { user } = useUser();
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
-    function handleFormSubmit(values: BillFormValues) {
+    function handleFormSubmit(values: IncomeStreamFormValues) {
         if (!user || !firestore) return;
         setSubmitting(true);
         
-        const billData = {
-          ...values,
-          dueDate: values.dueDate.toISOString(),
-          paid: false,
-        };
-
-        addDocumentNonBlocking(collection(firestore, `users/${user.uid}/bills`), billData);
-        router.push('/dashboard/bills');
+        addDocumentNonBlocking(collection(firestore, `users/${user.uid}/incomeStreams`), values);
+        router.push('/dashboard/runway');
     }
 
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>Add a New Bill</CardTitle>
-                <CardDescription>Enter the details for a new recurring payment.</CardDescription>
+                <CardTitle>Add a New Income Stream</CardTitle>
+                <CardDescription>Enter the details of a new source of income.</CardDescription>
             </CardHeader>
             <CardContent>
-                <BillForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={null} />
+                <IncomeStreamForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={null} />
             </CardContent>
         </Card>
     );

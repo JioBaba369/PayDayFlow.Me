@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { StatCard } from '@/components/dashboard/stat-card';
 import {
   Card,
@@ -24,19 +24,10 @@ import { LineChartInteractive } from '@/components/charts/line-chart-interactive
 import { formatCurrency } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import type { Asset, Liability, NetWorth, NetWorthHistoryPoint } from '@/lib/types';
-import { useUser, useCollection, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, Firestore, doc, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { AssetForm, type AssetFormValues } from '@/components/dashboard/net-worth/asset-form';
-import { LiabilityForm, type LiabilityFormValues } from '@/components/dashboard/net-worth/liability-form';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,40 +36,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 
-type DialogState = {
-  isOpen: boolean;
-  type: 'asset' | 'liability' | null;
-  data: Asset | Liability | null;
-};
-
 export default function NetWorthPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
-
-  const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: null, data: null });
-  const [isSubmitting, setSubmitting] = useState(false);
   const [isSnapshotting, setSnapshotting] = useState(false);
-
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    const action = searchParams.get('action');
-    if (action === 'add-asset') {
-      handleOpenDialog('asset');
-    } else if (action === 'add-liability') {
-      handleOpenDialog('liability');
-    }
-  }, [searchParams]);
-
-  const handleDialogChange = (open: boolean) => {
-    setDialogState(prev => ({ ...prev, isOpen: open }));
-    if (!open) {
-      setDialogState({ isOpen: false, type: null, data: null });
-      router.replace(pathname, { scroll: false });
-    }
-  }
 
   const assetsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/assets`), [firestore, user]);
   const liabilitiesQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/liabilities`), [firestore, user]);
@@ -108,38 +69,12 @@ export default function NetWorthPage() {
   const netWorthChangePercentage = lastMonthNetWorth !== 0 ? ((currentNetWorth - lastMonthNetWorth) / Math.abs(lastMonthNetWorth)) * 100 : 0;
   const isGrowthPositive = netWorthChange >= 0;
 
-  function handleOpenDialog(type: 'asset' | 'liability', data: Asset | Liability | null = null) {
-    setDialogState({ isOpen: true, type, data });
-  }
-
-  async function handleFormSubmit(values: AssetFormValues | LiabilityFormValues) {
-    if (!user) return;
-    setSubmitting(true);
-    const { type, data } = dialogState;
-    const collectionName = type === 'asset' ? 'assets' : 'liabilities';
-    const itemData = { ...values };
-
-    try {
-      if (data) { // Editing
-        const itemRef = doc(firestore, `users/${user.uid}/${collectionName}/${data.id}`);
-        await updateDocumentNonBlocking(itemRef, itemData);
-      } else { // Creating
-        await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/${collectionName}`), itemData);
-      }
-      handleDialogChange(false);
-    } catch (error) {
-      console.error(`Error submitting ${type}:`, error);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   async function handleDelete(collectionName: 'assets' | 'liabilities', id: string) {
     if (!user) return;
     await deleteDocumentNonBlocking(doc(firestore, `users/${user.uid}/${collectionName}/${id}`));
   }
   
-  async function handleSnapshot() {
+  function handleSnapshot() {
     if (!user) return;
     setSnapshotting(true);
     const newSnapshot = {
@@ -147,12 +82,12 @@ export default function NetWorthPage() {
       assets: totalAssets,
       liabilities: totalLiabilities,
     };
-    await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/netWorths`), newSnapshot);
-    setSnapshotting(false);
+    addDocumentNonBlocking(collection(firestore, `users/${user.uid}/netWorths`), newSnapshot).finally(() => {
+      setSnapshotting(false);
+    });
   }
 
   return (
-    <Dialog open={dialogState.isOpen} onOpenChange={handleDialogChange}>
       <div className="grid auto-rows-max items-start gap-4 md:gap-8">
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4">
           <StatCard
@@ -193,7 +128,7 @@ export default function NetWorthPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Assets</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleOpenDialog('asset')}><PlusCircle className="mr-2 h-4 w-4" /> Add Asset</Button>
+              <Button asChild variant="outline" size="sm"><Link href="/dashboard/net-worth/asset/add"><PlusCircle className="mr-2 h-4 w-4" /> Add Asset</Link></Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -223,11 +158,14 @@ export default function NetWorthPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDialog('asset', asset)}>
-                              <Pencil className="h-4 w-4" /> Edit
+                            <DropdownMenuItem asChild>
+                               <Link href={`/dashboard/net-worth/asset/edit/${asset.id}`}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete('assets', asset.id)} className="text-destructive">
-                              <Trash2 className="h-4 w-4" /> Delete
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -242,7 +180,7 @@ export default function NetWorthPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Liabilities</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => handleOpenDialog('liability')}><PlusCircle className="mr-2 h-4 w-4" /> Add Liability</Button>
+              <Button asChild variant="outline" size="sm"><Link href="/dashboard/net-worth/liability/add"><PlusCircle className="mr-2 h-4 w-4" /> Add Liability</Link></Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -272,11 +210,14 @@ export default function NetWorthPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDialog('liability', liability)}>
-                                <Pencil className="h-4 w-4" /> Edit
+                            <DropdownMenuItem asChild>
+                               <Link href={`/dashboard/net-worth/liability/edit/${liability.id}`}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete('liabilities', liability.id)} className="text-destructive">
-                              <Trash2 className="h-4 w-4" /> Delete
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -290,21 +231,5 @@ export default function NetWorthPage() {
           </Card>
         </div>
       </div>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {dialogState.data ? 'Edit' : 'Add'} {dialogState.type === 'asset' ? 'Asset' : 'Liability'}
-          </DialogTitle>
-          <DialogDescription>
-            Enter the details for your {dialogState.type}.
-          </DialogDescription>
-        </DialogHeader>
-        {dialogState.type === 'asset' ? (
-          <AssetForm onSubmit={handleFormSubmit as (values: AssetFormValues) => Promise<void>} isSubmitting={isSubmitting} initialData={dialogState.data as Asset | null} />
-        ) : (
-          <LiabilityForm onSubmit={handleFormSubmit as (values: LiabilityFormValues) => Promise<void>} isSubmitting={isSubmitting} initialData={dialogState.data as Liability | null} />
-        )}
-      </DialogContent>
-    </Dialog>
   );
 }

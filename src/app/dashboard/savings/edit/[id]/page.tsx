@@ -3,40 +3,40 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExpenseForm, type ExpenseFormValues } from '@/components/dashboard/expenses/expense-form';
+import { GoalForm, type GoalFormValues } from '@/components/dashboard/savings/goal-form';
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking } from '@/firebase';
 import { doc, Firestore } from 'firebase/firestore';
-import type { Expense } from '@/lib/types';
+import type { SavingsGoal } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function EditExpensePage({ params }: { params: { id: string }}) {
+export default function EditGoalPage({ params }: { params: { id: string }}) {
     const { user } = useUser();
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
-    const expenseRef = useMemo(() => {
+    const goalRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/expenses/${params.id}`);
+        return doc(firestore, `users/${user.uid}/savingsGoals/${params.id}`);
     }, [user, firestore, params.id]);
 
-    const { data: editingExpense, isLoading: isExpenseLoading } = useDoc<Expense>(expenseRef);
+    const { data: editingGoal, isLoading: isGoalLoading } = useDoc<SavingsGoal>(goalRef);
 
-    function handleFormSubmit(values: ExpenseFormValues) {
-        if (!user || !firestore || !editingExpense) return;
+    function handleFormSubmit(values: GoalFormValues) {
+        if (!user || !firestore || !editingGoal) return;
         setSubmitting(true);
         
-        const expenseData = {
+        const goalData = {
           ...values,
-          date: values.date.toISOString(),
+          targetDate: values.targetDate ? values.targetDate.toISOString() : undefined,
         };
 
-        const expenseRefToUpdate = doc(firestore, `users/${user.uid}/expenses/${editingExpense.id}`);
-        updateDocumentNonBlocking(expenseRefToUpdate, expenseData);
-        router.push('/dashboard/expenses');
+        const goalRefToUpdate = doc(firestore, `users/${user.uid}/savingsGoals/${editingGoal.id}`);
+        updateDocumentNonBlocking(goalRefToUpdate, { ...goalData, currentAmount: editingGoal.currentAmount });
+        router.push('/dashboard/savings');
     }
 
-    if (isExpenseLoading) {
+    if (isGoalLoading) {
         return (
              <Card className="max-w-2xl mx-auto">
                 <CardHeader>
@@ -47,18 +47,17 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
                 </CardContent>
             </Card>
         );
     }
 
-    if (!editingExpense) {
+    if (!editingGoal) {
         return (
             <Card className="max-w-2xl mx-auto">
                 <CardHeader>
-                    <CardTitle>Expense Not Found</CardTitle>
-                    <CardDescription>The expense you are trying to edit does not exist or could not be loaded.</CardDescription>
+                    <CardTitle>Savings Goal Not Found</CardTitle>
+                    <CardDescription>The goal you are trying to edit does not exist or could not be loaded.</CardDescription>
                 </CardHeader>
             </Card>
         );
@@ -67,11 +66,11 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>Edit Expense</CardTitle>
-                <CardDescription>Update the details for this expense.</CardDescription>
+                <CardTitle>Edit Savings Goal</CardTitle>
+                <CardDescription>Update the details of your savings goal.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ExpenseForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingExpense} />
+                <GoalForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingGoal} />
             </CardContent>
         </Card>
     );

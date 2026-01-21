@@ -1,52 +1,27 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
 import { PiggyBank, Briefcase, MinusCircle, Hourglass, PlusCircle, Trash2, MoreHorizontal, Pencil } from 'lucide-react';
-import { useUser, useCollection, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, Firestore, query, where, doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
-import type { IncomeStream, Bill, Expense, SavingsGoal, Asset } from '@/lib/types';
+import type { IncomeStream, Bill, Expense, Asset } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { IncomeStreamForm, type IncomeStreamFormValues } from '@/components/dashboard/runway/income-stream-form';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 export default function RunwayPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [editingStream, setEditingStream] = useState<IncomeStream | null>(null);
-
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (searchParams.get('action') === 'add-income') {
-      handleOpenDialog();
-    }
-  }, [searchParams]);
-
-  const handleDialogChange = (open: boolean) => {
-    if (!open) {
-      setEditingStream(null);
-      router.replace(pathname, { scroll: false });
-    }
-    setDialogOpen(open);
-  };
-
-
+  
   // Queries
   const incomeQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/incomeStreams`), [firestore, user]);
   const billsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/bills`), [firestore, user]);
-  const savingsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/savingsGoals`), [firestore, user]);
   const assetsQuery = useMemo(() => !user ? null : query(collection(firestore, `users/${user.uid}/assets`), where('type', '==', 'Cash')), [firestore, user]);
 
   const threeMonthsAgo = new Date();
@@ -56,15 +31,14 @@ export default function RunwayPage() {
   // Data fetching
   const { data: incomeStreams, isLoading: incomeLoading } = useCollection<IncomeStream>(incomeQuery);
   const { data: bills, isLoading: billsLoading } = useCollection<Bill>(billsQuery);
-  const { data: savingsGoals, isLoading: savingsLoading } = useCollection<SavingsGoal>(savingsQuery);
   const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(assetsQuery);
   const { data: recentExpenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   
-  const isLoading = isUserLoading || incomeLoading || billsLoading || savingsLoading || assetsLoading || expensesLoading;
+  const isLoading = isUserLoading || incomeLoading || billsLoading || assetsLoading || expensesLoading;
   const currency = userProfile?.currency;
 
   // Calculations
-  const { monthlyIncome, monthlyFixedExpenses, monthlyVariableExpenses, savingsVelocity, totalSavings, monthlyBurn, runwayMonths } = useMemo(() => {
+  const { monthlyBurn, savingsVelocity, runwayMonths, totalSavings, monthlyFixedExpenses, monthlyVariableExpenses } = useMemo(() => {
     const monthlyIncome = incomeStreams?.reduce((sum, stream) => {
       switch (stream.schedule) {
         case 'Weekly': return sum + (stream.amount * 52 / 12);
@@ -74,7 +48,7 @@ export default function RunwayPage() {
         case 'Quarterly': return sum + stream.amount / 3;
         case 'Semi-Annually': return sum + stream.amount / 6;
         case 'Yearly': return sum + stream.amount / 12;
-        case 'One-Time': return sum; // One-time is not a recurring monthly income
+        case 'One-Time': return sum;
         default: return sum;
       }
     }, 0) || 0;
@@ -88,7 +62,7 @@ export default function RunwayPage() {
     const savingsVelocity = monthlyIncome - (monthlyFixedExpenses + monthlyVariableExpenses);
     
     const totalCashAssets = cashAssets?.reduce((sum, asset) => sum + asset.value, 0) || 0;
-    const totalSavings = totalCashAssets; // Total savings is just cash on hand for runway calc
+    const totalSavings = totalCashAssets;
 
     const monthlyBurn = (monthlyFixedExpenses + monthlyVariableExpenses) - monthlyIncome;
     const runwayMonths = (monthlyBurn > 0 && totalSavings > 0) ? totalSavings / monthlyBurn : Infinity;
@@ -96,37 +70,12 @@ export default function RunwayPage() {
     return { monthlyIncome, monthlyFixedExpenses, monthlyVariableExpenses, savingsVelocity, totalSavings, monthlyBurn, runwayMonths };
   }, [incomeStreams, bills, recentExpenses, cashAssets]);
   
-  function handleOpenDialog(stream: IncomeStream | null = null) {
-    setEditingStream(stream);
-    setDialogOpen(true);
-  }
-
-  async function handleFormSubmit(values: IncomeStreamFormValues) {
-    if (!user) return;
-    setSubmitting(true);
-
-    try {
-        if (editingStream) {
-            const streamRef = doc(firestore, `users/${user.uid}/incomeStreams/${editingStream.id}`);
-            await updateDocumentNonBlocking(streamRef, values);
-        } else {
-            await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/incomeStreams`), values);
-        }
-        handleDialogChange(false);
-    } catch (error) {
-        console.error("Error submitting income stream: ", error);
-    } finally {
-        setSubmitting(false);
-    }
-  }
-
   async function handleDelete(id: string) {
     if(!user) return;
     await deleteDocumentNonBlocking(doc(firestore, `users/${user.uid}/incomeStreams/${id}`));
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
     <div className="grid gap-6">
        <div>
           <h1 className="text-2xl font-bold tracking-tight font-headline">Personal Runway</h1>
@@ -146,7 +95,7 @@ export default function RunwayPage() {
                 <CardTitle>Income Streams</CardTitle>
                 <CardDescription>Your sources of monthly income.</CardDescription>
             </div>
-            <Button size="sm" onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" />Add Income</Button>
+            <Button asChild size="sm"><Link href="/dashboard/runway/income/add"><PlusCircle className="mr-2 h-4 w-4" />Add Income</Link></Button>
           </CardHeader>
           <CardContent>
             <Table>
@@ -169,11 +118,13 @@ export default function RunwayPage() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleOpenDialog(stream)}>
-                                    <Pencil className="h-4 w-4"/> Edit
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/dashboard/runway/income/edit/${stream.id}`}>
+                                        <Pencil className="mr-2 h-4 w-4"/> Edit
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDelete(stream.id)} className="text-destructive">
-                                    <Trash2 className="h-4 w-4"/> Delete
+                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -217,15 +168,5 @@ export default function RunwayPage() {
         </Card>
       </div>
     </div>
-    <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{editingStream ? 'Edit' : 'Add'} Income Stream</DialogTitle>
-          <DialogDescription>
-            {editingStream ? 'Update the details of this income source.' : 'Enter the details of a new source of income.'}
-          </DialogDescription>
-        </DialogHeader>
-        <IncomeStreamForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingStream} />
-      </DialogContent>
-    </Dialog>
   );
 }

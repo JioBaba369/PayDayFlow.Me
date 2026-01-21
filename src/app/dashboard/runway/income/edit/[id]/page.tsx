@@ -3,40 +3,35 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExpenseForm, type ExpenseFormValues } from '@/components/dashboard/expenses/expense-form';
+import { IncomeStreamForm, type IncomeStreamFormValues } from '@/components/dashboard/runway/income-stream-form';
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking } from '@/firebase';
 import { doc, Firestore } from 'firebase/firestore';
-import type { Expense } from '@/lib/types';
+import type { IncomeStream } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function EditExpensePage({ params }: { params: { id: string }}) {
+export default function EditIncomePage({ params }: { params: { id: string }}) {
     const { user } = useUser();
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
-    const expenseRef = useMemo(() => {
+    const incomeRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/expenses/${params.id}`);
+        return doc(firestore, `users/${user.uid}/incomeStreams/${params.id}`);
     }, [user, firestore, params.id]);
 
-    const { data: editingExpense, isLoading: isExpenseLoading } = useDoc<Expense>(expenseRef);
+    const { data: editingIncome, isLoading: isIncomeLoading } = useDoc<IncomeStream>(incomeRef);
 
-    function handleFormSubmit(values: ExpenseFormValues) {
-        if (!user || !firestore || !editingExpense) return;
+    function handleFormSubmit(values: IncomeStreamFormValues) {
+        if (!user || !firestore || !editingIncome) return;
         setSubmitting(true);
-        
-        const expenseData = {
-          ...values,
-          date: values.date.toISOString(),
-        };
 
-        const expenseRefToUpdate = doc(firestore, `users/${user.uid}/expenses/${editingExpense.id}`);
-        updateDocumentNonBlocking(expenseRefToUpdate, expenseData);
-        router.push('/dashboard/expenses');
+        const incomeRefToUpdate = doc(firestore, `users/${user.uid}/incomeStreams/${editingIncome.id}`);
+        updateDocumentNonBlocking(incomeRefToUpdate, values);
+        router.push('/dashboard/runway');
     }
 
-    if (isExpenseLoading) {
+    if (isIncomeLoading) {
         return (
              <Card className="max-w-2xl mx-auto">
                 <CardHeader>
@@ -47,18 +42,17 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
                 </CardContent>
             </Card>
         );
     }
 
-    if (!editingExpense) {
+    if (!editingIncome) {
         return (
             <Card className="max-w-2xl mx-auto">
                 <CardHeader>
-                    <CardTitle>Expense Not Found</CardTitle>
-                    <CardDescription>The expense you are trying to edit does not exist or could not be loaded.</CardDescription>
+                    <CardTitle>Income Stream Not Found</CardTitle>
+                    <CardDescription>The income stream you are trying to edit does not exist or could not be loaded.</CardDescription>
                 </CardHeader>
             </Card>
         );
@@ -67,11 +61,11 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>Edit Expense</CardTitle>
-                <CardDescription>Update the details for this expense.</CardDescription>
+                <CardTitle>Edit Income Stream</CardTitle>
+                <CardDescription>Update the details of this income source.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ExpenseForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingExpense} />
+                <IncomeStreamForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingIncome} />
             </CardContent>
         </Card>
     );

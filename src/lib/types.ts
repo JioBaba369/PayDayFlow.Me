@@ -13,7 +13,7 @@ export type Bill = {
   amount: number;
   dueDate: string;
   paid: boolean;
-  category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other' | 'Spotify' | 'Netflix' | 'Cas';
+  category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other';
 };
 
 export type BudgetDoc = {

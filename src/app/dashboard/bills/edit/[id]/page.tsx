@@ -22,7 +22,7 @@ export default function EditBillPage({ params }: { params: { id: string }}) {
 
     const { data: editingBill, isLoading: isBillLoading } = useDoc<Bill>(billRef);
 
-    async function handleFormSubmit(values: BillFormValues) {
+    function handleFormSubmit(values: BillFormValues) {
         if (!user || !firestore || !editingBill) return;
         setSubmitting(true);
         
@@ -31,15 +31,9 @@ export default function EditBillPage({ params }: { params: { id: string }}) {
           dueDate: values.dueDate.toISOString(),
         };
 
-        try {
-            const billRefToUpdate = doc(firestore, `users/${user.uid}/bills/${editingBill.id}`);
-            await updateDocumentNonBlocking(billRefToUpdate, { ...billData, paid: editingBill.paid });
-            router.push('/dashboard/bills');
-        } catch (error) {
-          console.error("Error updating bill: ", error);
-        } finally {
-          setSubmitting(false);
-        }
+        const billRefToUpdate = doc(firestore, `users/${user.uid}/bills/${editingBill.id}`);
+        updateDocumentNonBlocking(billRefToUpdate, { ...billData, paid: editingBill.paid });
+        router.push('/dashboard/bills');
     }
 
     if (isBillLoading) {

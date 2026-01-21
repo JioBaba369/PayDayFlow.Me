@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Plane } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { doc, setDoc, Firestore } from 'firebase/firestore';
+import { doc, Firestore } from 'firebase/firestore';
 import { CompleteProfileForm, type CompleteProfileFormValues } from '@/components/dashboard/complete-profile/complete-profile-form';
 
 export default function CompleteProfilePage() {
@@ -21,7 +21,7 @@ export default function CompleteProfilePage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function onSubmit(values: CompleteProfileFormValues) {
+  function onSubmit(values: CompleteProfileFormValues) {
     if (!user) {
         toast({
             variant: 'destructive',
@@ -31,30 +31,22 @@ export default function CompleteProfilePage() {
         return;
     }
     setIsSubmitting(true);
-    try {
-        const profileRef = doc(firestore, `userProfiles/${user.uid}`);
-        await setDoc(profileRef, {
-            email: user.email,
-            firstName: values.firstName,
-            lastName: values.lastName,
-            country: values.country,
-            currency: values.currency,
-        });
-        toast({
-            title: 'Profile Completed!',
-            description: 'Welcome! You are now being redirected to your dashboard.',
-        });
-        // The ProfileCompletionGuard will handle the redirect automatically.
-    } catch (error) {
-        console.error("Error creating profile:", error);
-        toast({
-            variant: 'destructive',
-            title: 'An error occurred.',
-            description: 'Could not save your profile. Please try again.',
-        });
-    } finally {
-        setIsSubmitting(false);
-    }
+
+    const profileRef = doc(firestore, `userProfiles/${user.uid}`);
+    setDocumentNonBlocking(profileRef, {
+        email: user.email,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        country: values.country,
+        currency: values.currency,
+    }, { merge: true });
+
+    toast({
+        title: 'Profile Completed!',
+        description: 'Welcome! You are now being redirected to your dashboard.',
+    });
+    // The ProfileCompletionGuard will handle the redirect automatically.
+    // We don't need to manually set isSubmitting to false, as the redirect will unmount the component.
   }
 
   return (

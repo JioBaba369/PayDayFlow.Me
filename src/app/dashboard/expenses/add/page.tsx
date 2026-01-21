@@ -13,7 +13,7 @@ export default function AddExpensePage() {
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
 
-    async function handleFormSubmit(values: ExpenseFormValues) {
+    function handleFormSubmit(values: ExpenseFormValues) {
         if (!user || !firestore) return;
         setSubmitting(true);
         
@@ -22,15 +22,8 @@ export default function AddExpensePage() {
           date: values.date.toISOString(),
         };
 
-        try {
-          await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/expenses`), expenseData);
-          router.push('/dashboard/expenses');
-        } catch (error) {
-          console.error("Error submitting expense: ", error);
-          // You could add a toast notification here for the user
-        } finally {
-          setSubmitting(false);
-        }
+        addDocumentNonBlocking(collection(firestore, `users/${user.uid}/expenses`), expenseData);
+        router.push('/dashboard/expenses');
     }
 
     return (

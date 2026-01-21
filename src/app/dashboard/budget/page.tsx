@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useMemo } from 'react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -13,47 +13,18 @@ import { Progress } from '@/components/ui/progress';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { useUser, useCollection, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, Firestore, query, where, orderBy, doc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import type { Budget, BudgetDoc, Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { BudgetForm, type BudgetFormValues } from '@/components/dashboard/budget/budget-form';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function BudgetPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
-
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (searchParams.get('action') === 'add-budget') {
-      handleOpenDialog();
-    }
-  }, [searchParams]);
-
-  const handleDialogChange = (open: boolean) => {
-    if (!open) {
-      setEditingBudget(null);
-      router.replace(pathname, { scroll: false });
-    }
-    setDialogOpen(open);
-  };
-
+  
   const budgetsQuery = useMemo(() => {
     if (!user || !firestore) return null;
     return collection(firestore, `users/${user.uid}/budgets`);
@@ -85,40 +56,15 @@ export default function BudgetPage() {
     });
   }, [budgetDocs, expenses]);
 
-  function handleOpenDialog(budget: Budget | null = null) {
-    setEditingBudget(budget);
-    setDialogOpen(true);
-  }
-
-  async function handleFormSubmit(values: BudgetFormValues) {
-    if (!user || !firestore) return;
-    setSubmitting(true);
-
-    try {
-      if (editingBudget) {
-        const budgetRef = doc(firestore, `users/${user.uid}/budgets/${editingBudget.id}`);
-        await updateDocumentNonBlocking(budgetRef, values);
-      } else {
-        await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/budgets`), values);
-      }
-      handleDialogChange(false);
-    } catch (error) {
-      console.error("Error submitting budget: ", error);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   async function handleDeleteBudget(budgetId: string) {
     if (!user || !firestore) return;
-    await deleteDocumentNonBlocking(doc(firestore, `users/${user.uid}/budgets/${budgetId}`));
+    deleteDocumentNonBlocking(doc(firestore, `users/${user.uid}/budgets/${budgetId}`));
   }
 
   const isLoading = isUserLoading || areBudgetsLoading || areExpensesLoading;
   const currency = userProfile?.currency;
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
       <div className="grid gap-6">
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
@@ -126,9 +72,11 @@ export default function BudgetPage() {
               <CardTitle>Budgeting</CardTitle>
               <CardDescription>Track your monthly spending against your budget.</CardDescription>
             </div>
-            <Button onClick={() => handleOpenDialog()}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Budget
+            <Button asChild>
+              <Link href="/dashboard/budget/add">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Budget
+              </Link>
             </Button>
           </CardHeader>
           <CardContent className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -159,12 +107,14 @@ export default function BudgetPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <DropdownMenuItem onClick={() => handleOpenDialog(budget)}>
-                          <Pencil className="h-4 w-4" />
-                          Edit
+                         <DropdownMenuItem asChild>
+                           <Link href={`/dashboard/budget/edit/${budget.id}`}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDeleteBudget(budget.id)} className="text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -193,15 +143,5 @@ export default function BudgetPage() {
           </CardContent>
         </Card>
       </div>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{editingBudget ? 'Edit Budget' : 'Add a New Budget'}</DialogTitle>
-          <DialogDescription>
-            {editingBudget ? 'Update the details for this budget category.' : 'Create a spending limit for a new category.'}
-          </DialogDescription>
-        </DialogHeader>
-        <BudgetForm onSubmit={handleFormSubmit} isSubmitting={isSubmitting} initialData={editingBudget} />
-      </DialogContent>
-    </Dialog>
   );
 }
