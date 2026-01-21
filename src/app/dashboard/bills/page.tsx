@@ -71,7 +71,6 @@ export default function BillsPage() {
     const billData = {
       ...values,
       dueDate: values.dueDate.toISOString(),
-      userProfileId: user.uid,
     };
 
     try {

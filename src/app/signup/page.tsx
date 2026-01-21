@@ -79,7 +79,6 @@ export default function SignupPage() {
         email: user.email,
         firstName: values.firstName,
         lastName: values.lastName,
-        userProfileId: user.uid,
       });
 
       // AuthGuard will handle redirect once auth state updates and profile is found.

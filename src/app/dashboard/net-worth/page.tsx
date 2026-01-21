@@ -94,7 +94,7 @@ export default function NetWorthPage() {
     setSubmitting(true);
     const { type, data } = dialogState;
     const collectionName = type === 'asset' ? 'assets' : 'liabilities';
-    const itemData = { ...values, userProfileId: user.uid };
+    const itemData = { ...values };
 
     try {
       if (data) { // Editing
@@ -123,7 +123,6 @@ export default function NetWorthPage() {
       date: new Date().toISOString(),
       assets: totalAssets,
       liabilities: totalLiabilities,
-      userProfileId: user.uid,
     };
     await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/netWorths`), newSnapshot);
     setSnapshotting(false);

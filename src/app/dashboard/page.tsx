@@ -132,7 +132,6 @@ export default function DashboardPage() {
         {
           ...values,
           date: values.date.toISOString(),
-          userProfileId: user!.uid,
         }
       );
       setExpenseDialogOpen(false);

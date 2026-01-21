@@ -67,7 +67,6 @@ export default function SavingsPage() {
     const goalData = {
       ...values,
       targetDate: values.targetDate ? values.targetDate.toISOString() : undefined,
-      userProfileId: user.uid,
     };
 
     try {

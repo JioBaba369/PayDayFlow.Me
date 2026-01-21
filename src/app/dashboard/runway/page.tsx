@@ -37,7 +37,7 @@ export default function RunwayPage() {
   const { data: incomeStreams, isLoading: incomeLoading } = useCollection<IncomeStream>(incomeQuery);
   const { data: bills, isLoading: billsLoading } = useCollection<Bill>(billsQuery);
   const { data: savingsGoals, isLoading: savingsLoading } = useCollection<SavingsGoal>(savingsQuery);
-  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(assetsQuery);
+  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(cashAssetsQuery);
   const { data: recentExpenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   
   const isLoading = isUserLoading || incomeLoading || billsLoading || savingsLoading || assetsLoading || expensesLoading;
@@ -79,14 +79,13 @@ export default function RunwayPage() {
   async function handleFormSubmit(values: IncomeStreamFormValues) {
     if (!user) return;
     setSubmitting(true);
-    const streamData = { ...values, userProfileId: user.uid };
 
     try {
         if (editingStream) {
             const streamRef = doc(firestore, `users/${user.uid}/incomeStreams/${editingStream.id}`);
-            await updateDocumentNonBlocking(streamRef, streamData);
+            await updateDocumentNonBlocking(streamRef, values);
         } else {
-            await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/incomeStreams`), streamData);
+            await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/incomeStreams`), values);
         }
         setDialogOpen(false);
         setEditingStream(null);

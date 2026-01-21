@@ -13,14 +13,12 @@ export type Bill = {
   dueDate: string;
   paid: boolean;
   category: 'Housing' | 'Utilities' | 'Internet' | 'Mobile' | 'Subscriptions' | 'Insurance' | 'Transport' | 'Healthcare' | 'Loan Payment' | 'Other';
-  userProfileId: string;
 };
 
 export type BudgetDoc = {
   id: string;
   category: string;
   allocated: number;
-  userProfileId: string;
 };
 
 export type Budget = {
@@ -36,7 +34,6 @@ export type Expense = {
   description: string;
   amount: number;
   date: string;
-  userProfileId: string;
 };
 
 export type SavingsGoal = {
@@ -45,7 +42,6 @@ export type SavingsGoal = {
   targetAmount: number;
   currentAmount: number;
   targetDate?: string;
-  userProfileId: string;
 };
 
 export type Asset = {
@@ -53,7 +49,6 @@ export type Asset = {
   name: string;
   value: number;
   type: 'Cash' | 'Investment' | 'Property' | 'Other';
-  userProfileId: string;
 };
 
 export type Liability = {
@@ -61,7 +56,6 @@ export type Liability = {
   name: string;
   value: number;
   type: 'Loan' | 'Credit Card' | 'Mortgage' | 'Other';
-  userProfileId: string;
 };
 
 export type NetWorth = {
@@ -69,7 +63,6 @@ export type NetWorth = {
   date: string;
   assets: number;
   liabilities: number;
-  userProfileId: string;
 }
 
 export type NetWorthHistoryPoint = {
@@ -82,7 +75,6 @@ export type IncomeStream = {
   name: string;
   amount: number;
   schedule: 'Monthly' | 'Bi-Weekly' | 'One-Time' | 'Yearly';
-  userProfileId: string;
 };
 
 export type Transaction = {

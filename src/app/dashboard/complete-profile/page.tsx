@@ -37,7 +37,6 @@ export default function CompleteProfilePage() {
             email: user.email,
             firstName: values.firstName,
             lastName: values.lastName,
-            userProfileId: user.uid,
         });
         toast({
             title: 'Profile Completed!',

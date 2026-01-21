@@ -74,18 +74,13 @@ export default function BudgetPage() {
   async function handleFormSubmit(values: BudgetFormValues) {
     if (!user || !firestore) return;
     setSubmitting(true);
-    
-    const budgetData = {
-      ...values,
-      userProfileId: user.uid,
-    };
 
     try {
       if (editingBudget) {
         const budgetRef = doc(firestore, `users/${user.uid}/budgets/${editingBudget.id}`);
-        await updateDocumentNonBlocking(budgetRef, budgetData);
+        await updateDocumentNonBlocking(budgetRef, values);
       } else {
-        await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/budgets`), budgetData);
+        await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/budgets`), values);
       }
       setDialogOpen(false);
       setEditingBudget(null);
