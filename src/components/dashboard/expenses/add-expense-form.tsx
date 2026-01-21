@@ -143,6 +143,9 @@ export function AddExpenseForm({ onSubmit, isSubmitting }: AddExpenseFormProps) 
                     disabled={(date) =>
                       date > new Date() || date < new Date("2000-01-01")
                     }
+                    fromYear={2000}
+                    toYear={new Date().getFullYear()}
+                    toDate={new Date()}
                     initialFocus
                   />
                 </PopoverContent>

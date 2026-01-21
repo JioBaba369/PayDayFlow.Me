@@ -110,6 +110,9 @@ export function GoalForm({ onSubmit, isSubmitting, initialData }: GoalFormProps)
                     disabled={(date) =>
                       date < new Date()
                     }
+                    fromDate={new Date()}
+                    fromYear={new Date().getFullYear()}
+                    toYear={new Date().getFullYear() + 20}
                     initialFocus
                   />
                 </PopoverContent>
