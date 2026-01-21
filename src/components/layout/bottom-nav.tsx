@@ -7,16 +7,16 @@ import {
   PiggyBank,
   Receipt,
   Target,
-  TrendingUp,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/budget', icon: PiggyBank, label: 'Budget' },
   { href: '/dashboard/bills', icon: Receipt, label: 'Bills' },
+  { href: '/dashboard/expenses', icon: CreditCard, label: 'Expenses' },
+  { href: '/dashboard/budget', icon: PiggyBank, label: 'Budget' },
   { href: '/dashboard/savings', icon: Target, label: 'Savings' },
-  { href: '/dashboard/net-worth', icon: TrendingUp, label: 'Net Worth' },
 ];
 
 export function BottomNav() {
@@ -32,7 +32,7 @@ export function BottomNav() {
                 href={item.href}
                 className={cn(
                   'flex flex-col items-center justify-center h-full w-full gap-1 text-xs font-medium',
-                  pathname === item.href
+                   pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-primary'
                 )}

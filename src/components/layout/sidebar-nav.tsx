@@ -12,6 +12,7 @@ import {
   Sparkles,
   User,
   Settings,
+  CreditCard,
 } from 'lucide-react';
 
 import {
@@ -24,6 +25,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/budget', icon: PiggyBank, label: 'Budget' },
   { href: '/dashboard/bills', icon: Receipt, label: 'Bills' },
+  { href: '/dashboard/expenses', icon: CreditCard, label: 'Expenses' },
   { href: '/dashboard/savings', icon: Target, label: 'Savings' },
   { href: '/dashboard/net-worth', icon: TrendingUp, label: 'Net Worth' },
   { href: '/dashboard/runway', icon: Plane, label: 'Runway' },
@@ -41,7 +43,7 @@ export function SidebarNav() {
         <SidebarMenuItem key={item.href}>
           <Link href={item.href}>
             <SidebarMenuButton
-              isActive={pathname === item.href}
+              isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
               tooltip={item.label}
             >
               <item.icon />

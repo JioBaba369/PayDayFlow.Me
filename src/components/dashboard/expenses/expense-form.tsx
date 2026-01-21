@@ -24,8 +24,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
+import type { Expense } from '@/lib/types';
 
 const expenseCategories = ['Food', 'Dining Out', 'Transportation', 'Household', 'Education', 'Health', 'Beauty', 'Gifts', 'Self-development', 'Entertainment', 'Other'] as const;
 
@@ -42,20 +43,22 @@ const formSchema = z.object({
   }),
 });
 
-export type AddExpenseFormValues = z.infer<typeof formSchema>;
+export type ExpenseFormValues = z.infer<typeof formSchema>;
 
-type AddExpenseFormProps = {
-  onSubmit: (values: AddExpenseFormValues) => Promise<void>;
+type ExpenseFormProps = {
+  onSubmit: (values: ExpenseFormValues) => Promise<void>;
   isSubmitting: boolean;
+  initialData?: Expense | null;
 };
 
-export function AddExpenseForm({ onSubmit, isSubmitting }: AddExpenseFormProps) {
-  const form = useForm<AddExpenseFormValues>({
+export function ExpenseForm({ onSubmit, isSubmitting, initialData }: ExpenseFormProps) {
+  const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      description: '',
-      amount: 0,
-      date: new Date(),
+      description: initialData?.description || '',
+      amount: initialData?.amount || 0,
+      category: initialData?.category,
+      date: initialData?.date ? parseISO(initialData.date) : new Date(),
     },
   });
 
@@ -156,7 +159,7 @@ export function AddExpenseForm({ onSubmit, isSubmitting }: AddExpenseFormProps) 
         />
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Add Expense
+          {initialData ? 'Save Changes' : 'Add Expense'}
         </Button>
       </form>
     </Form>

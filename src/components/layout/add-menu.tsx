@@ -21,7 +21,7 @@ export function AddMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
-          <Link href="/dashboard?action=add-expense">Add Expense</Link>
+          <Link href="/dashboard/expenses?action=add-expense">Add Expense</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/dashboard/bills?action=add-bill">Add Bill</Link>

@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from '@/components/ui/dialog';
-import { AddExpenseForm, type AddExpenseFormValues } from '@/components/dashboard/expenses/add-expense-form';
+import { ExpenseForm, type ExpenseFormValues } from '@/components/dashboard/expenses/expense-form';
 
 function DashboardSkeleton() {
   return (
@@ -161,7 +161,7 @@ export default function DashboardPage() {
   }, [goals]);
 
   // --- EVENTS ---
-  async function handleAddExpense(values: AddExpenseFormValues) {
+  async function handleAddExpense(values: ExpenseFormValues) {
     if (!ready) return;
     setSubmittingExpense(true);
     try {
@@ -320,7 +320,7 @@ export default function DashboardPage() {
         <DialogHeader>
           <DialogTitle>Add Expense</DialogTitle>
         </DialogHeader>
-        <AddExpenseForm onSubmit={handleAddExpense} isSubmitting={isSubmittingExpense} />
+        <ExpenseForm onSubmit={handleAddExpense} isSubmitting={isSubmittingExpense} initialData={null} />
       </DialogContent>
     </Dialog>
   );
