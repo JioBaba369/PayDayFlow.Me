@@ -26,7 +26,9 @@ service cloud.firestore {
        USER DATA
        /users/{userId}/...
     ───────────────────────────── */
-    match /users/{userId}/{document=**} {
+    // This rule allows a user to access documents in any subcollection
+    // directly under their user document (e.g., .../users/{uid}/bills/{billId})
+    match /users/{userId}/{collection}/{document} {
       allow read, write: if isOwner(userId);
     }
 
