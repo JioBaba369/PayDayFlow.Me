@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter, PT_Sans } from 'next/font/google';
 import './globals.css';
@@ -17,22 +18,25 @@ const fontPTSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'FinDash',
+  title: {
+    default: 'FinDash',
+    template: '%s | FinDash',
+  },
   description: 'Your personal finance dashboard.',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           'min-h-screen bg-background font-body antialiased',
           fontInter.variable,
-          fontPTSans.variable
+          fontPTSans.variable,
         )}
       >
         <FirebaseClientProvider>

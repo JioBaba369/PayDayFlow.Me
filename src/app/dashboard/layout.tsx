@@ -1,7 +1,10 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, type PropsWithChildren } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { Plane } from 'lucide-react';
+import { signOut, type Auth } from 'firebase/auth';
+
 import { Header } from '@/components/layout/header';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import {
@@ -11,26 +14,24 @@ import {
   SidebarInset,
   SidebarProvider,
 } from '@/components/ui/sidebar';
-import { Plane } from 'lucide-react';
 import useIdleTimer from '@/hooks/use-idle-timer';
-import { signOut, Auth } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { useAuth, useUser } from '@/firebase';
 import { ProfileCompletionGuard } from '@/components/layout/profile-completion-guard';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type DashboardLayoutProps = PropsWithChildren;
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
-  const auth = useAuth() as Auth;
+  const auth = useAuth() as Auth | null;
   const { user } = useUser();
   const { toast } = useToast();
   const pathname = usePathname();
 
   const handleIdle = useCallback(async () => {
+    if (!auth) return;
+
     try {
       await signOut(auth);
       toast({
@@ -45,14 +46,16 @@ export default function DashboardLayout({
 
   const IDLE_TIMEOUT = 15 * 60 * 1000;
 
-  // ✅ Only start idle timer when user is authenticated
+  // Only start idle timer when user is authenticated
   useIdleTimer(handleIdle, IDLE_TIMEOUT, {
-    enabled: !!user,
+    enabled: !!user && !!auth,
   });
+
+  const isProfileCompletionRoute = pathname === '/dashboard/complete-profile';
 
   return (
     <ProfileCompletionGuard>
-      {pathname === '/dashboard/complete-profile' ? (
+      {isProfileCompletionRoute ? (
         children
       ) : (
         <SidebarProvider>

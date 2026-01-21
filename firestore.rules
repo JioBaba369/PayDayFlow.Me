@@ -3,22 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /* ─────────────────────────────
-       HELPERS
-    ───────────────────────────── */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /* ─────────────────────────────
        USER PROFILES
        /userProfiles/{userId}
     ───────────────────────────── */
     match /userProfiles/{userId} {
-      allow get, list, create, update: if isOwner(userId);
+      allow get, create, update: if request.auth != null && request.auth.uid == userId;
       allow delete: if false; // Profiles shouldn't be deleted by users
     }
 
@@ -29,42 +18,41 @@ service cloud.firestore {
     match /users/{userId} {
       // This rule allows a user to read their own top-level user document.
       // It does not grant access to the subcollections below.
-      allow get: if isOwner(userId);
+      allow get: if request.auth != null && request.auth.uid == userId;
 
       // --- USER SUBCOLLECTIONS ---
-      // These rules grant access to the documents within each subcollection.
-      // A user can only access the subcollections under their own user ID.
+      // Rules for subcollections must be nested to correctly check ownership.
       
       match /assets/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /bills/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /budgets/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /expenses/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /incomeStreams/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /liabilities/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /netWorths/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
       match /savingsGoals/{docId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
   }
