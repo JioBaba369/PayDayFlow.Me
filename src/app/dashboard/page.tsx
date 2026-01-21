@@ -25,6 +25,25 @@ import {
 } from '@/components/ui/dialog';
 import { AddExpenseForm, type AddExpenseFormValues } from '@/components/dashboard/expenses/add-expense-form';
 
+function DashboardSkeleton() {
+  return (
+      <div className="space-y-6 animate-pulse">
+          <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Skeleton className="h-28 rounded-lg" />
+              <Skeleton className="h-28 rounded-lg" />
+              <Skeleton className="h-28 rounded-lg" />
+              <Skeleton className="h-28 rounded-lg" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card><CardHeader><Skeleton className="h-6 w-3/5"/></CardHeader><CardContent><Skeleton className="h-40 w-full"/></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-6 w-3/5"/></CardHeader><CardContent><Skeleton className="h-40 w-full"/></CardContent></Card>
+              <Card className="lg:col-span-2"><CardHeader><Skeleton className="h-6 w-1/4"/></CardHeader><CardContent><Skeleton className="h-24 w-full"/></CardContent></Card>
+          </div>
+      </div>
+  )
+}
+
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore | null;
@@ -121,6 +140,10 @@ export default function DashboardPage() {
       setSubmittingExpense(false);
     }
   }
+  
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   // --- RENDER ---
   return (
@@ -129,10 +152,10 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Cash on Hand" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(cashLeft)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
-          <StatCard title="Upcoming Bills" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(totalUpcomingBills)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
-          <StatCard title="Total Savings" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(savingsProgress.current)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={`${Math.round(savingsProgress.percent)}% of goals complete`} />
-          <StatCard title="Daily Spending Pace" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(spendingPace)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average this month" />
+          <StatCard title="Cash on Hand" value={formatCurrency(cashLeft)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
+          <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
+          <StatCard title="Total Savings" value={formatCurrency(savingsProgress.current)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={`${Math.round(savingsProgress.percent)}% of goals complete`} />
+          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average this month" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -158,23 +181,14 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {isLoading && Array.from({ length: 5 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-5 w-12 ml-auto" /></TableCell>
-                                </TableRow>
-                            ))}
-                            {!isLoading && recentExpenses.length > 0 && recentExpenses.map((expense) => (
+                            {recentExpenses.length > 0 ? recentExpenses.map((expense) => (
                                 <TableRow key={expense.id}>
                                     <TableCell className="font-medium">{expense.description}</TableCell>
                                     <TableCell><Badge variant="outline">{expense.category}</Badge></TableCell>
                                     <TableCell>{format(parseISO(expense.date), 'MMM d')}</TableCell>
                                     <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                                 </TableRow>
-                            ))}
-                             {!isLoading && recentExpenses.length === 0 && (
+                            )) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-24 text-center">
                                         No expenses logged this month.
@@ -211,14 +225,7 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                             {isLoading && Array.from({ length: 5 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-5 w-12 ml-auto" /></TableCell>
-                                </TableRow>
-                            ))}
-                           {!isLoading && bills && bills.map((bill) => {
+                           {bills && bills.length > 0 ? bills.map((bill) => {
                                 const daysUntilDue = differenceInDays(parseISO(bill.dueDate), new Date());
                                 return (
                                     <TableRow key={bill.id}>
@@ -227,8 +234,7 @@ export default function DashboardPage() {
                                         <TableCell className="text-right">{formatCurrency(bill.amount)}</TableCell>
                                     </TableRow>
                                 );
-                            })}
-                             {!isLoading && (!bills || bills.length === 0) && (
+                            }) : (
                                 <TableRow>
                                     <TableCell colSpan={3} className="h-24 text-center">
                                         No upcoming bills.
@@ -246,8 +252,7 @@ export default function DashboardPage() {
                     <CardDescription>Your progress towards your financial goals.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-6">
-                    {isLoading && <Skeleton className="h-20 w-full" />}
-                    {!isLoading && goals && goals.map((goal) => {
+                    {goals && goals.length > 0 ? goals.map((goal) => {
                         const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
                         return (
                             <div key={goal.id} className="grid gap-2">
@@ -258,8 +263,7 @@ export default function DashboardPage() {
                                 <Progress value={progress} />
                             </div>
                         )
-                    })}
-                     {!isLoading && (!goals || goals.length === 0) && (
+                    }) : (
                         <div className="text-center text-muted-foreground py-8">
                             No savings goals set up yet. <Link href="/dashboard/savings" className="underline text-primary">Add one now</Link>.
                         </div>

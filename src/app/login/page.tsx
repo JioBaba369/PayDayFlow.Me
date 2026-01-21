@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Loader2, Plane } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Auth } from 'firebase/auth';
 import { UnauthenticatedAuthGuard } from '@/components/layout/auth-guard';
@@ -28,10 +28,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { AuthLayout } from '@/components/layout/auth-layout';
 
 const formSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1),
+  password: z.string().min(1, { message: 'Password is required' }),
 });
 
 export default function LoginPage() {
@@ -55,10 +56,8 @@ export default function LoginPage() {
         variant: 'destructive',
         title: 'Login Failed',
         description:
-          error?.code === 'auth/wrong-password'
-            ? 'Incorrect password.'
-            : error?.code === 'auth/user-not-found'
-            ? 'No account found with this email.'
+          error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential'
+            ? 'Incorrect email or password.'
             : 'Something went wrong. Please try again.',
       });
       form.resetField('password');
@@ -88,88 +87,75 @@ export default function LoginPage() {
 
   return (
     <UnauthenticatedAuthGuard>
-      <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
-        <div className="hidden bg-muted lg:flex lg:flex-col lg:justify-between p-8">
-          <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
-            <Plane className="h-6 w-6" />
-            <span>PayDayFlow.me</span>
-          </Link>
+      <AuthLayout
+        title="Take control of your finances."
+        description="Track spending, manage bills, and reach savings goals."
+      >
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>Enter your email to continue.</CardDescription>
+          </CardHeader>
 
-          <div className="mb-48">
-            <h1 className="text-4xl font-bold">Take control of your finances.</h1>
-            <p className="text-muted-foreground mt-4 text-lg">
-              Track spending, manage bills, and reach savings goals.
-            </p>
-          </div>
-        </div>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" disabled={isLoading || isAnonymousLoading} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-        <div className="flex items-center justify-center py-12">
-          <Card className="w-full max-w-sm">
-            <CardHeader>
-              <CardTitle className="text-2xl">Login</CardTitle>
-              <CardDescription>Enter your email to continue.</CardDescription>
-            </CardHeader>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" disabled={isLoading || isAnonymousLoading} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" disabled={isLoading || isAnonymousLoading} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <Button type="submit" disabled={isLoading || isAnonymousLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Sign in
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
 
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" disabled={isLoading || isAnonymousLoading} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          <CardFooter className="flex-col gap-4">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleAnonymousLogin}
+              disabled={isLoading || isAnonymousLoading}
+            >
+              {isAnonymousLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Continue as Guest
+            </Button>
 
-                  <Button type="submit" disabled={isLoading || isAnonymousLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign in
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-
-            <CardFooter className="flex-col gap-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleAnonymousLogin}
-                disabled={isLoading || isAnonymousLoading}
-              >
-                {isAnonymousLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Continue as Guest
-              </Button>
-
-              <div className="text-sm text-center">
-                Don&apos;t have an account?{' '}
-                <Link href="/signup" className="underline">
-                  Sign up
-                </Link>
-              </div>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
+            <div className="text-sm text-center">
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="underline">
+                Sign up
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </AuthLayout>
     </UnauthenticatedAuthGuard>
   );
 }

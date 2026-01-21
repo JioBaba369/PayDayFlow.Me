@@ -2,17 +2,35 @@
 
 import { useEffect, useRef } from 'react';
 
-const useIdleTimer = (onIdle: () => void, idleTime: number) => {
+type IdleTimerOptions = {
+  enabled?: boolean;
+};
+
+const useIdleTimer = (
+  onIdle: () => void,
+  idleTime: number,
+  options: IdleTimerOptions = { enabled: true }
+) => {
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
+  const { enabled } = options;
 
   const resetTimer = () => {
     if (timeoutId.current) {
       clearTimeout(timeoutId.current);
     }
-    timeoutId.current = setTimeout(onIdle, idleTime);
+    if (enabled) {
+      timeoutId.current = setTimeout(onIdle, idleTime);
+    }
   };
 
   useEffect(() => {
+    if (!enabled) {
+      if (timeoutId.current) {
+        clearTimeout(timeoutId.current);
+      }
+      return;
+    }
+
     const events = ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'];
 
     const handleActivity = () => {
@@ -23,7 +41,6 @@ const useIdleTimer = (onIdle: () => void, idleTime: number) => {
       window.addEventListener(event, handleActivity);
     });
 
-    // Set the initial timer
     resetTimer();
 
     return () => {
@@ -34,7 +51,7 @@ const useIdleTimer = (onIdle: () => void, idleTime: number) => {
         window.removeEventListener(event, handleActivity);
       });
     };
-  }, [onIdle, idleTime]);
+  }, [onIdle, idleTime, enabled]); // Add enabled to dependency array
 
   return null;
 };
