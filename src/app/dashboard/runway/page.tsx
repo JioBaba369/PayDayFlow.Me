@@ -57,7 +57,7 @@ export default function RunwayPage() {
   const { data: incomeStreams, isLoading: incomeLoading } = useCollection<IncomeStream>(incomeQuery);
   const { data: bills, isLoading: billsLoading } = useCollection<Bill>(billsQuery);
   const { data: savingsGoals, isLoading: savingsLoading } = useCollection<SavingsGoal>(savingsQuery);
-  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(cashAssetsQuery);
+  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(assetsQuery);
   const { data: recentExpenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   
   const isLoading = isUserLoading || incomeLoading || billsLoading || savingsLoading || assetsLoading || expensesLoading;
