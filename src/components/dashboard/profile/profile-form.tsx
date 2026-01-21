@@ -7,6 +7,7 @@ import * as z from 'zod';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -34,6 +35,7 @@ const formSchema = z.object({
   }),
   country: z.string({ required_error: 'Please select a country.' }),
   currency: z.string({ required_error: 'Please select a currency.' }),
+  financialYearStartMonth: z.coerce.number().optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof formSchema>;
@@ -44,6 +46,11 @@ type ProfileFormProps = {
   initialData: UserProfile | null;
 };
 
+const months = Array.from({ length: 12 }, (_, i) => ({
+  value: i + 1,
+  label: new Date(2000, i, 1).toLocaleString('default', { month: 'long' }),
+}));
+
 export function ProfileForm({ onSubmit, isSubmitting, initialData }: ProfileFormProps) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
@@ -52,6 +59,7 @@ export function ProfileForm({ onSubmit, isSubmitting, initialData }: ProfileForm
       lastName: initialData?.lastName || '',
       country: initialData?.country || undefined,
       currency: initialData?.currency || undefined,
+      financialYearStartMonth: initialData?.financialYearStartMonth || 1,
     },
   });
 
@@ -73,6 +81,7 @@ export function ProfileForm({ onSubmit, isSubmitting, initialData }: ProfileForm
             lastName: initialData.lastName,
             country: initialData.country,
             currency: initialData.currency,
+            financialYearStartMonth: initialData.financialYearStartMonth || 1,
         });
     }
   }, [initialData, form]);
@@ -153,6 +162,33 @@ export function ProfileForm({ onSubmit, isSubmitting, initialData }: ProfileForm
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="financialYearStartMonth"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Financial Year Start</FormLabel>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a month" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month.value} value={month.value.toString()}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+               <FormDescription>
+                Set the month your financial year begins. Defaults to January.
+            </FormDescription>
               <FormMessage />
             </FormItem>
           )}

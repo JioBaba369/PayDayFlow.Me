@@ -5,6 +5,7 @@ export type UserProfile = {
   lastName: string;
   country: string;
   currency: string;
+  financialYearStartMonth?: number; // 1 for Jan, 12 for Dec
 };
 
 export type Bill = {
@@ -64,6 +65,7 @@ export type NetWorth = {
   date: string;
   assets: number;
   liabilities: number;
+  name?: string;
 }
 
 export type NetWorthHistoryPoint = {

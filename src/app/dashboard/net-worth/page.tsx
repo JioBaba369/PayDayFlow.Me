@@ -2,6 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { format, parseISO } from 'date-fns';
 import { StatCard } from '@/components/dashboard/stat-card';
 import {
   Card,
@@ -29,11 +33,51 @@ import { collection, Firestore, doc, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+
+
+const snapshotFormSchema = z.object({
+  name: z.string().optional(),
+});
+type SnapshotFormValues = z.infer<typeof snapshotFormSchema>;
+
+function SnapshotForm({ onSubmit, isSubmitting }: { onSubmit: (values: SnapshotFormValues) => void; isSubmitting: boolean; }) {
+  const form = useForm<SnapshotFormValues>({
+    resolver: zodResolver(snapshotFormSchema),
+    defaultValues: { name: '' },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Snapshot Name (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder={`e.g., End of Year ${new Date().getFullYear()}`} {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Snapshot'}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
 
 export default function NetWorthPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
   const [isSnapshotting, setSnapshotting] = useState(false);
+  const [isSnapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
 
   const assetsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/assets`), [firestore, user]);
   const liabilitiesQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/liabilities`), [firestore, user]);
@@ -53,7 +97,7 @@ export default function NetWorthPage() {
   const netWorthHistory: NetWorthHistoryPoint[] = useMemo(() => {
     if (!netWorthHistoryDocs) return [];
     return netWorthHistoryDocs.map(doc => ({
-      date: new Date(doc.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      date: new Date(doc.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
       netWorth: doc.assets - doc.liabilities,
     })).reverse();
   }, [netWorthHistoryDocs]);
@@ -68,58 +112,109 @@ export default function NetWorthPage() {
   const netWorthChangePercentage = lastSnapshotNetWorth !== 0 ? (netWorthChange / Math.abs(lastSnapshotNetWorth)) * 100 : 0;
   const isGrowthPositive = netWorthChange >= 0;
 
-  async function handleDelete(collectionName: 'assets' | 'liabilities', id: string) {
+  async function handleDeleteAssetOrLiability(collectionName: 'assets' | 'liabilities', id: string) {
     if (!user) return;
     deleteDocumentNonBlocking(doc(firestore, `users/${user.uid}/${collectionName}/${id}`));
   }
   
-  function handleSnapshot() {
+  async function handleDeleteSnapshot(id: string) {
+    if (!user) return;
+    deleteDocumentNonBlocking(doc(firestore, `users/${user.uid}/netWorths/${id}`));
+  }
+  
+  function handleSnapshotSubmit(values: SnapshotFormValues) {
     if (!user) return;
     setSnapshotting(true);
     const newSnapshot = {
+      name: values.name || `Snapshot ${format(new Date(), 'PPP p')}`,
       date: new Date().toISOString(),
       assets: totalAssets,
       liabilities: totalLiabilities,
     };
     addDocumentNonBlocking(collection(firestore, `users/${user.uid}/netWorths`), newSnapshot).finally(() => {
       setSnapshotting(false);
+      setSnapshotDialogOpen(false);
     });
   }
 
   return (
-      <div className="grid auto-rows-max items-start gap-4 md:gap-8">
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <StatCard
-            title="Total Assets"
-            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalAssets, currency)}
-            icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-          />
-          <StatCard
-            title="Total Liabilities"
-            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalLiabilities, currency)}
-            icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />}
-          />
-          <StatCard
-            title="Net Worth"
-            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(currentNetWorth, currency)}
-            description={isLoading ? <Skeleton className="h-4 w-48" /> : `Change since last snapshot: ${isGrowthPositive ? '+' : ''}${formatCurrency(netWorthChange, currency)} (${netWorthChangePercentage.toFixed(2)}%)`}
-            icon={<Scale className="h-4 w-4 text-muted-foreground" />}
-          />
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <LineChartInteractive
-            data={netWorthHistory}
-            currency={currency}
-            title="Net Worth History"
-            description="Your net worth over time."
-            action={
-               <Button onClick={handleSnapshot} disabled={isSnapshotting} size="sm">
-                    {isSnapshotting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
-                    Snapshot
-                </Button>
-            }
-          />
-          <div className="grid gap-4 md:grid-cols-1">
+      <Dialog open={isSnapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
+        <div className="grid auto-rows-max items-start gap-4 md:gap-8">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <StatCard
+              title="Total Assets"
+              value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalAssets, currency)}
+              icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatCard
+              title="Total Liabilities"
+              value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalLiabilities, currency)}
+              icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatCard
+              title="Live Net Worth"
+              value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(currentNetWorth, currency)}
+              description={isLoading || netWorthHistoryDocs?.length === 0 ? "Take a snapshot to track change" : `Change since last snapshot: ${isGrowthPositive ? '+' : ''}${formatCurrency(netWorthChange, currency)} (${netWorthChangePercentage.toFixed(2)}%)`}
+              icon={<Scale className="h-4 w-4 text-muted-foreground" />}
+            />
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <LineChartInteractive
+              data={netWorthHistory}
+              currency={currency}
+              title="Net Worth History"
+              description="A historical view of your saved net worth snapshots."
+              action={
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                      <Camera className="mr-2 h-4 w-4" />
+                      New Snapshot
+                  </Button>
+                </DialogTrigger>
+              }
+            />
+             <Card>
+                <CardHeader>
+                <CardTitle>Snapshot History</CardTitle>
+                <CardDescription>A record of your previous net worth snapshots.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="text-right">Net Worth</TableHead>
+                        <TableHead className="w-[50px] text-right">Action</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {areNetWorthsLoading && Array.from({length: 3}).map((_,i) => (
+                        <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                    ))}
+                    {!areNetWorthsLoading && netWorthHistoryDocs?.map(snapshot => {
+                        const netWorth = snapshot.assets - snapshot.liabilities;
+                        return (
+                        <TableRow key={snapshot.id}>
+                            <TableCell>{format(parseISO(snapshot.date), 'PPP')}</TableCell>
+                            <TableCell className="font-medium">{snapshot.name}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(netWorth, currency)}</TableCell>
+                            <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDeleteSnapshot(snapshot.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Delete snapshot</span>
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                        )
+                    })}
+                    {!areNetWorthsLoading && netWorthHistoryDocs?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No snapshots recorded yet.</TableCell></TableRow>}
+                    </TableBody>
+                </Table>
+                </CardContent>
+            </Card>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Assets</CardTitle>
@@ -152,7 +247,7 @@ export default function NetWorthPage() {
                                 <span className="sr-only">Edit Asset</span>
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete('assets', asset.id)}>
+                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAssetOrLiability('assets', asset.id)}>
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only">Delete Asset</span>
                             </Button>
@@ -197,7 +292,7 @@ export default function NetWorthPage() {
                                   <span className="sr-only">Edit Liability</span>
                                 </Link>
                               </Button>
-                              <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete('liabilities', liability.id)}>
+                              <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAssetOrLiability('liabilities', liability.id)}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete Liability</span>
                               </Button>
@@ -212,6 +307,15 @@ export default function NetWorthPage() {
             </Card>
           </div>
         </div>
-      </div>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Create New Snapshot</DialogTitle>
+                <DialogDescription>
+                    Optionally give this snapshot a name to easily identify it later.
+                </DialogDescription>
+            </DialogHeader>
+            <SnapshotForm onSubmit={handleSnapshotSubmit} isSubmitting={isSnapshotting} />
+        </DialogContent>
+      </Dialog>
   );
 }
