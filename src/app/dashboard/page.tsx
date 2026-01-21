@@ -131,7 +131,11 @@ export default function DashboardPage() {
   const recentExpenses = expenses?.slice(0, 5) ?? [];
   const cashLeft = assets?.reduce((s, a) => s + a.value, 0) ?? 0;
   const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
-  const spendingPace = totalMonthlySpending / (new Date().getDate());
+  
+  const dayOfMonth = new Date().getDate();
+  // Ensure we don't divide by zero, although getDate() is 1-31.
+  // This makes the logic more robust and explicit.
+  const spendingPace = dayOfMonth > 0 ? totalMonthlySpending / dayOfMonth : 0;
 
   const upcomingBills = unpaidBills?.slice(0, 5) ?? [];
 
@@ -192,7 +196,7 @@ export default function DashboardPage() {
           <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
           <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills, currency)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
           <StatCard title="Total Savings" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={`${Math.round(savingsProgress.percent)}% of goals complete`} />
-          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average this month" />
+          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average spend per day this month" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
