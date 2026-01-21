@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { StatCard } from '@/components/dashboard/stat-card';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useUser, useCollection } from '@/firebase';
 import { collection, query, where, limit, orderBy, Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
@@ -108,8 +108,6 @@ export default function DashboardPage() {
   const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
   
   const dayOfMonth = new Date().getDate();
-  // Ensure we don't divide by zero, although getDate() is 1-31.
-  // This makes the logic more robust and explicit.
   const spendingPace = dayOfMonth > 0 ? totalMonthlySpending / dayOfMonth : 0;
 
   const upcomingBills = unpaidBills?.slice(0, 5) ?? [];
@@ -138,6 +136,13 @@ export default function DashboardPage() {
       percent: target > 0 ? (current / target) * 100 : 0,
     };
   }, [goals]);
+
+  const savingsProgressDescription = useMemo(() => {
+    if (!goals || goals.length === 0 || savingsProgress.target === 0) {
+        return 'No goals set yet';
+    }
+    return `Towards ${formatCurrency(savingsProgress.target, currency)} target`;
+  }, [goals, savingsProgress.target, currency]);
   
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -151,7 +156,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
           <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills, currency)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
-          <StatCard title="Total Savings" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={`${Math.round(savingsProgress.percent)}% of goals complete`} />
+          <StatCard title="Goal Progress" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={savingsProgressDescription} />
           <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average spend per day this month" />
         </div>
 
@@ -219,17 +224,31 @@ export default function DashboardPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
-                                <TableHead>Days Left</TableHead>
+                                <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Amount</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                            {upcomingBills && upcomingBills.length > 0 ? upcomingBills.map((bill) => {
-                                const daysUntilDue = differenceInDays(parseISO(bill.dueDate), new Date());
+                                const dueDate = parseISO(bill.dueDate);
+                                const daysUntilDue = differenceInDays(dueDate, new Date());
+                                const isOverdue = daysUntilDue < 0;
+
+                                let dueDateText;
+                                if (isOverdue) {
+                                    dueDateText = <span className="text-destructive">{Math.abs(daysUntilDue)} days overdue</span>;
+                                } else if (daysUntilDue === 0) {
+                                    dueDateText = <span>Due today</span>;
+                                } else if (daysUntilDue === 1) {
+                                    dueDateText = <span>1 day left</span>;
+                                } else {
+                                    dueDateText = <span>{daysUntilDue} days left</span>;
+                                }
+
                                 return (
                                     <TableRow key={bill.id}>
                                         <TableCell className="font-medium">{bill.name}</TableCell>
-                                        <TableCell>{daysUntilDue} days</TableCell>
+                                        <TableCell>{dueDateText}</TableCell>
                                         <TableCell className="text-right">{formatCurrency(bill.amount, currency)}</TableCell>
                                     </TableRow>
                                 );
