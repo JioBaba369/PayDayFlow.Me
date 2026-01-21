@@ -55,13 +55,10 @@ export default function DashboardPage() {
   const currency = userProfile?.currency;
 
   // --- SAFE QUERIES ---
+  // Fetch all bills and filter/sort on the client to avoid composite index requirement.
   const billsQuery = useMemo(() => {
     if (!ready) return undefined;
-    return query(
-      collection(firestore!, `users/${user!.uid}/bills`),
-      where('paid', '==', false),
-      orderBy('dueDate', 'asc')
-    );
+    return collection(firestore!, `users/${user!.uid}/bills`);
   }, [ready, firestore, user]);
 
   const savingsGoalsQuery = useMemo(() => {
@@ -91,7 +88,7 @@ export default function DashboardPage() {
   }, [ready, firestore, user]);
 
   // --- DATA FETCHING (SAFE) ---
-  const {data: unpaidBills, isLoading: areBillsLoading} = useCollection<Bill>(billsQuery);
+  const {data: allBills, isLoading: areBillsLoading} = useCollection<Bill>(billsQuery);
   const {data: goals, isLoading: areGoalsLoading} = useCollection<SavingsGoal>(savingsGoalsQuery);
   const {data: expenses, isLoading: areExpensesLoading} = useCollection<Expense>(expensesQuery);
   const {data: assets, isLoading: areAssetsLoading} = useCollection<Asset>(assetsQuery);
@@ -104,6 +101,15 @@ export default function DashboardPage() {
     areAssetsLoading;
 
   // --- DERIVED DATA ---
+  
+  // Filter and sort bills on the client
+  const unpaidBills = useMemo(() => {
+    if (!allBills) return [];
+    return allBills
+      .filter(bill => !bill.paid)
+      .sort((a, b) => parseISO(a.dueDate).getTime() - parseISO(b.dueDate).getTime());
+  }, [allBills]);
+
   const recentExpenses = expenses?.slice(0, 5) ?? [];
   const cashLeft = assets?.reduce((s, a) => s + a.value, 0) ?? 0;
   const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
