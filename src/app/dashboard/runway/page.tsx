@@ -57,7 +57,7 @@ export default function RunwayPage() {
   const { data: incomeStreams, isLoading: incomeLoading } = useCollection<IncomeStream>(incomeQuery);
   const { data: bills, isLoading: billsLoading } = useCollection<Bill>(billsQuery);
   const { data: savingsGoals, isLoading: savingsLoading } = useCollection<SavingsGoal>(savingsQuery);
-  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(assetsQuery);
+  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(cashAssetsQuery);
   const { data: recentExpenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   
   const isLoading = isUserLoading || incomeLoading || billsLoading || savingsLoading || assetsLoading || expensesLoading;
@@ -67,8 +67,12 @@ export default function RunwayPage() {
   const { monthlyIncome, monthlyFixedExpenses, monthlyVariableExpenses, savingsVelocity, totalSavings, monthlyBurn, runwayMonths } = useMemo(() => {
     const monthlyIncome = incomeStreams?.reduce((sum, stream) => {
       switch (stream.schedule) {
+        case 'Weekly': return sum + (stream.amount * 52 / 12);
+        case 'Bi-Weekly': return sum + (stream.amount * 26 / 12);
+        case 'Semi-Monthly': return sum + stream.amount * 2;
         case 'Monthly': return sum + stream.amount;
-        case 'Bi-Weekly': return sum + stream.amount * 2;
+        case 'Quarterly': return sum + stream.amount / 3;
+        case 'Semi-Annually': return sum + stream.amount / 6;
         case 'Yearly': return sum + stream.amount / 12;
         case 'One-Time': return sum; // One-time is not a recurring monthly income
         default: return sum;

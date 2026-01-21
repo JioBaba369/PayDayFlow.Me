@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { IncomeStream } from '@/lib/types';
 
-const scheduleTypes = ['Monthly', 'Bi-Weekly', 'One-Time', 'Yearly'] as const;
+const scheduleTypes = ['Weekly', 'Bi-Weekly', 'Semi-Monthly', 'Monthly', 'Quarterly', 'Semi-Annually', 'Yearly', 'One-Time'] as const;
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Stream name must be at least 2 characters.' }),

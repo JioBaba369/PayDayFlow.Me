@@ -13,7 +13,7 @@ export type Bill = {
   amount: number;
   dueDate: string;
   paid: boolean;
-  category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other' | 'Spotify' | 'Netflix';
+  category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other' | 'Spotify' | 'Netflix' | 'Cas';
 };
 
 export type BudgetDoc = {
@@ -31,7 +31,7 @@ export type Budget = {
 
 export type Expense = {
   id: string;
-  category: string;
+  category: 'Food' | 'Dining Out' | 'Transportation' | 'Household' | 'Education' | 'Health' | 'Beauty' | 'Gifts' | 'Self-development' | 'Entertainment' | 'Other';
   description: string;
   amount: number;
   date: string;
@@ -76,7 +76,7 @@ export type IncomeStream = {
   id: string;
   name: string;
   amount: number;
-  schedule: 'Monthly' | 'Bi-Weekly' | 'One-Time' | 'Yearly';
+  schedule: 'Weekly' | 'Bi-Weekly' | 'Semi-Monthly' | 'Monthly' | 'Quarterly' | 'Semi-Annually' | 'Yearly' | 'One-Time';
 };
 
 export type Transaction = {
