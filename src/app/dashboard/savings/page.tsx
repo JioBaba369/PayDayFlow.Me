@@ -36,7 +36,7 @@ import {
 import { format, parseISO } from 'date-fns';
 
 export default function SavingsPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
   
   const [dialogState, setDialogState] = useState<{ type: 'goal' | 'funds'; isOpen: boolean }>({ type: 'goal', isOpen: false });
@@ -108,6 +108,7 @@ export default function SavingsPage() {
   }
 
   const isLoading = isUserLoading || areGoalsLoading;
+  const currency = userProfile?.currency;
   
   const currentDialog = dialogState.type === 'goal' ? (
         <DialogContent>
@@ -182,7 +183,7 @@ export default function SavingsPage() {
                       <div className="grid gap-1">
                         <CardTitle>{goal.name}</CardTitle>
                         <CardDescription>
-                          {isComplete ? "Goal achieved! 🎉" : `${formatCurrency(goal.targetAmount - goal.currentAmount)} to go`}
+                          {isComplete ? "Goal achieved! 🎉" : `${formatCurrency(goal.targetAmount - goal.currentAmount, currency)} to go`}
                         </CardDescription>
                       </div>
                        <DropdownMenu>
@@ -213,10 +214,10 @@ export default function SavingsPage() {
                         <Progress value={progress} aria-label={`${goal.name} progress`} />
                         <div className="flex justify-between text-sm">
                           <span className="font-medium text-primary">
-                            {formatCurrency(goal.currentAmount)}
+                            {formatCurrency(goal.currentAmount, currency)}
                           </span>
                           <span className="text-muted-foreground">
-                            {formatCurrency(goal.targetAmount)}
+                            {formatCurrency(goal.targetAmount, currency)}
                           </span>
                         </div>
                       </div>

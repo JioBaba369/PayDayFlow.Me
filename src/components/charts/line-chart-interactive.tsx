@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/card';
 import {
   ChartContainer,
-  ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
@@ -27,13 +26,45 @@ import type { NetWorthHistoryPoint } from '@/lib/types';
 
 type LineChartInteractiveProps = {
   data: NetWorthHistoryPoint[];
+  currency?: string;
   title: string;
   description: string;
   footerText: string;
 };
 
+const CustomTooltip = ({ active, payload, label, currency }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col space-y-1">
+            <span className="text-[0.70rem] uppercase text-muted-foreground">
+              Date
+            </span>
+            <span className="font-bold text-muted-foreground">
+              {label}
+            </span>
+          </div>
+          <div className="flex flex-col space-y-1">
+            <span className="text-[0.70rem] uppercase text-muted-foreground">
+              Net Worth
+            </span>
+            <span className="font-bold">
+              {formatCurrency(payload[0].value, currency)}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+
 export function LineChartInteractive({
   data,
+  currency,
   title,
   description,
   footerText,
@@ -70,13 +101,13 @@ export function LineChartInteractive({
               tickMargin={8}
             />
             <YAxis
-              tickFormatter={(value) => formatCurrency(value, {notation: 'compact'})}
+              tickFormatter={(value) => formatCurrency(value, currency, {notation: 'compact'})}
               tickLine={false}
               axisLine={false}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
+            <Tooltip
+              content={<CustomTooltip currency={currency} />}
+              wrapperStyle={{ outline: 'none' }}
             />
             <Line
               dataKey="netWorth"

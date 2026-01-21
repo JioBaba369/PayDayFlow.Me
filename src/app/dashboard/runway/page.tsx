@@ -17,7 +17,7 @@ import { IncomeStreamForm, type IncomeStreamFormValues } from '@/components/dash
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 export default function RunwayPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
@@ -37,10 +37,11 @@ export default function RunwayPage() {
   const { data: incomeStreams, isLoading: incomeLoading } = useCollection<IncomeStream>(incomeQuery);
   const { data: bills, isLoading: billsLoading } = useCollection<Bill>(billsQuery);
   const { data: savingsGoals, isLoading: savingsLoading } = useCollection<SavingsGoal>(savingsQuery);
-  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(cashAssetsQuery);
+  const { data: cashAssets, isLoading: assetsLoading } = useCollection<Asset>(assetsQuery);
   const { data: recentExpenses, isLoading: expensesLoading } = useCollection<Expense>(expensesQuery);
   
   const isLoading = isUserLoading || incomeLoading || billsLoading || savingsLoading || assetsLoading || expensesLoading;
+  const currency = userProfile?.currency;
 
   // Calculations
   const { monthlyIncome, monthlyFixedExpenses, monthlyVariableExpenses, savingsVelocity, totalSavings, monthlyBurn, runwayMonths } = useMemo(() => {
@@ -109,10 +110,10 @@ export default function RunwayPage() {
           <p className="text-muted-foreground">A founder-style dashboard for your personal finances.</p>
         </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Monthly Burn Rate" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(monthlyBurn)} description={monthlyBurn > 0 ? 'Cash flow negative' : 'Cash flow positive'} icon={<MinusCircle className="h-4 w-4 text-muted-foreground" />} />
-        <StatCard title="Savings Velocity" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(savingsVelocity)} description="Amount saved per month" icon={<PiggyBank className="h-4 w-4 text-muted-foreground" />} />
+        <StatCard title="Monthly Burn Rate" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(monthlyBurn, currency)} description={monthlyBurn > 0 ? 'Cash flow negative' : 'Cash flow positive'} icon={<MinusCircle className="h-4 w-4 text-muted-foreground" />} />
+        <StatCard title="Savings Velocity" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(savingsVelocity, currency)} description="Amount saved per month" icon={<PiggyBank className="h-4 w-4 text-muted-foreground" />} />
         <StatCard title="Runway" value={isLoading ? <Skeleton className="h-8 w-24"/> : isFinite(runwayMonths) ? `${runwayMonths.toFixed(1)} months` : 'Infinite'} description="Until savings run out" icon={<Hourglass className="h-4 w-4 text-muted-foreground" />} />
-        <StatCard title="Total Savings" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(totalSavings)} description="Your financial cushion" icon={<Briefcase className="h-4 w-4 text-muted-foreground" />} />
+        <StatCard title="Total Savings" value={isLoading ? <Skeleton className="h-8 w-24"/> : formatCurrency(totalSavings, currency)} description="Your financial cushion" icon={<Briefcase className="h-4 w-4 text-muted-foreground" />} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -140,7 +141,7 @@ export default function RunwayPage() {
                   <TableRow key={stream.id}>
                     <TableCell className="font-medium">{stream.name}</TableCell>
                     <TableCell>{stream.schedule}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(stream.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(stream.amount, currency)}</TableCell>
                     <TableCell>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
@@ -177,15 +178,15 @@ export default function RunwayPage() {
               <TableBody>
                 <TableRow>
                   <TableCell className="font-medium">Fixed Expenses (Bills)</TableCell>
-                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses)}</TableCell>
+                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses, currency)}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Variable Expenses (Avg.)</TableCell>
-                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyVariableExpenses)}</TableCell>
+                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyVariableExpenses, currency)}</TableCell>
                 </TableRow>
                  <TableRow className="font-bold">
                   <TableCell>Total Expenses</TableCell>
-                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses + monthlyVariableExpenses)}</TableCell>
+                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses + monthlyVariableExpenses, currency)}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>

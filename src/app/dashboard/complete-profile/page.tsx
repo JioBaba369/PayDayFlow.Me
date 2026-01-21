@@ -37,6 +37,8 @@ export default function CompleteProfilePage() {
             email: user.email,
             firstName: values.firstName,
             lastName: values.lastName,
+            country: values.country,
+            currency: values.currency,
         });
         toast({
             title: 'Profile Completed!',

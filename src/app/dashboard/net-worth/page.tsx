@@ -51,7 +51,7 @@ type DialogState = {
 };
 
 export default function NetWorthPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
 
   const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: null, data: null });
@@ -67,6 +67,7 @@ export default function NetWorthPage() {
   const { data: netWorthHistoryDocs, isLoading: areNetWorthsLoading } = useCollection<NetWorth>(netWorthQuery);
 
   const isLoading = isUserLoading || areAssetsLoading || areLiabilitiesLoading || areNetWorthsLoading;
+  const currency = userProfile?.currency;
 
   const totalAssets = useMemo(() => assets?.reduce((sum, asset) => sum + asset.value, 0) || 0, [assets]);
   const totalLiabilities = useMemo(() => liabilities?.reduce((sum, liability) => sum + liability.value, 0) || 0, [liabilities]);
@@ -134,18 +135,18 @@ export default function NetWorthPage() {
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Total Assets"
-            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalAssets)}
+            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalAssets, currency)}
             icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
           />
           <StatCard
             title="Total Liabilities"
-            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalLiabilities)}
+            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(totalLiabilities, currency)}
             icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />}
           />
           <StatCard
             title="Net Worth"
-            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(currentNetWorth)}
-            description={isLoading ? <Skeleton className="h-4 w-48" /> : `${isGrowthPositive ? '+' : ''}${formatCurrency(netWorthChange)} (${netWorthChangePercentage.toFixed(2)}%)`}
+            value={isLoading ? <Skeleton className="h-8 w-32" /> : formatCurrency(currentNetWorth, currency)}
+            description={isLoading ? <Skeleton className="h-4 w-48" /> : `${isGrowthPositive ? '+' : ''}${formatCurrency(netWorthChange, currency)} (${netWorthChangePercentage.toFixed(2)}%)`}
             icon={<Scale className="h-4 w-4 text-muted-foreground" />}
           />
            <Card className="flex items-center justify-center">
@@ -160,6 +161,7 @@ export default function NetWorthPage() {
         <div className="lg:col-span-2">
           <LineChartInteractive
             data={netWorthHistory}
+            currency={currency}
             title="Net Worth History"
             description="Your net worth over time."
             footerText="Tracking your financial growth."
@@ -189,7 +191,7 @@ export default function NetWorthPage() {
                     <TableRow key={asset.id}>
                       <TableCell className="font-medium">{asset.name}</TableCell>
                       <TableCell><Badge variant="outline">{asset.type}</Badge></TableCell>
-                      <TableCell className="text-right">{formatCurrency(asset.value)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(asset.value, currency)}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -238,7 +240,7 @@ export default function NetWorthPage() {
                     <TableRow key={liability.id}>
                       <TableCell className="font-medium">{liability.name}</TableCell>
                       <TableCell><Badge variant="outline">{liability.type}</Badge></TableCell>
-                      <TableCell className="text-right">{formatCurrency(liability.value)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(liability.value, currency)}</TableCell>
                        <TableCell>
                          <DropdownMenu>
                           <DropdownMenuTrigger asChild>

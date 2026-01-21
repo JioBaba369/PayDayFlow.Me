@@ -1,0 +1,31 @@
+export const currencies = [
+    { code: 'USD', name: 'United States Dollar' },
+    { code: 'EUR', name: 'Euro' },
+    { code: 'JPY', name: 'Japanese Yen' },
+    { code: 'GBP', name: 'British Pound Sterling' },
+    { code: 'AUD', name: 'Australian Dollar' },
+    { code: 'CAD', name: 'Canadian Dollar' },
+    { code: 'CHF', name: 'Swiss Franc' },
+    { code: 'CNY', name: 'Chinese Yuan' },
+    { code: 'INR', name: 'Indian Rupee' },
+    { code: 'BRL', name: 'Brazilian Real' },
+    { code: 'RUB', name: 'Russian Ruble' },
+    { code: 'KRW', name: 'South Korean Won' },
+    { code: 'SGD', name: 'Singapore Dollar' },
+];
+
+export const countries = [
+    { code: 'US', name: 'United States', currency: 'USD' },
+    { code: 'CA', name: 'Canada', currency: 'CAD' },
+    { code: 'GB', name: 'United Kingdom', currency: 'GBP' },
+    { code: 'AU', name: 'Australia', currency: 'AUD' },
+    { code: 'DE', name: 'Germany', currency: 'EUR' },
+    { code: 'FR', name: 'France', currency: 'EUR' },
+    { code: 'JP', name: 'Japan', currency: 'JPY' },
+    { code: 'IN', name: 'India', currency: 'INR' },
+    { code: 'BR', name: 'Brazil', currency: 'BRL' },
+    { code: 'RU', name: 'Russia', currency: 'RUB' },
+    { code: 'CN', name: 'China', currency: 'CNY' },
+    { code: 'KR', name: 'South Korea', currency: 'KRW' },
+    { code: 'SG', name: 'Singapore', currency: 'SGD' },
+];

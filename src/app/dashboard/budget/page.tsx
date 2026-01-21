@@ -29,7 +29,7 @@ import { startOfMonth, endOfMonth } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function BudgetPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
@@ -97,6 +97,7 @@ export default function BudgetPage() {
   }
 
   const isLoading = isUserLoading || areBudgetsLoading || areExpensesLoading;
+  const currency = userProfile?.currency;
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -159,10 +160,10 @@ export default function BudgetPage() {
                   />
                    <div className="flex justify-between">
                     <span className={cn('text-sm', isOverspent ? 'text-destructive font-medium' : 'text-muted-foreground')}>
-                      {formatCurrency(budget.spent)} spent
+                      {formatCurrency(budget.spent, currency)} spent
                     </span>
                      <span className="text-sm text-muted-foreground">
-                      {formatCurrency(budget.allocated)} budgeted
+                      {formatCurrency(budget.allocated, currency)} budgeted
                     </span>
                   </div>
                 </div>

@@ -17,7 +17,7 @@ import { useUser, useCollection, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, limit, orderBy, Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import type { Bill, SavingsGoal, Expense, Asset } from '@/lib/types';
-import { differenceInDays, parseISO, startOfMonth, format } from 'date-fns';
+import { differenceInDays, parseISO, startOfMonth, format, endOfMonth } from 'date-fns';
 import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -45,20 +45,22 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore | null;
 
   const [isExpenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [isSubmittingExpense, setSubmittingExpense] = useState(false);
 
   const ready = !!user && !!firestore && !isUserLoading;
+  const currency = userProfile?.currency;
 
   // --- SAFE QUERIES ---
   const billsQuery = useMemo(() => {
     if (!ready) return undefined;
     return query(
       collection(firestore!, `users/${user!.uid}/bills`),
-      where('paid', '==', false)
+      where('paid', '==', false),
+      orderBy('dueDate', 'asc')
     );
   }, [ready, firestore, user]);
 
@@ -107,12 +109,7 @@ export default function DashboardPage() {
   const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
   const spendingPace = totalMonthlySpending / (new Date().getDate());
 
-  const upcomingBills = useMemo(() => {
-    if (!unpaidBills) return [];
-    return [...unpaidBills]
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-      .slice(0, 5);
-  }, [unpaidBills]);
+  const upcomingBills = unpaidBills?.slice(0, 5) ?? [];
 
   const totalUpcomingBills = useMemo(() => {
     if (!unpaidBills) return 0;
@@ -135,7 +132,7 @@ export default function DashboardPage() {
     return {
       current,
       target,
-      percent: target ? (current / target) * 100 : 0,
+      percent: target > 0 ? (current / target) * 100 : 0,
     };
   }, [goals]);
 
@@ -168,10 +165,10 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Cash on Hand" value={formatCurrency(cashLeft)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
-          <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
-          <StatCard title="Total Savings" value={formatCurrency(savingsProgress.current)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={`${Math.round(savingsProgress.percent)}% of goals complete`} />
-          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average this month" />
+          <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
+          <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills, currency)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
+          <StatCard title="Total Savings" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={`${Math.round(savingsProgress.percent)}% of goals complete`} />
+          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average this month" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -202,7 +199,7 @@ export default function DashboardPage() {
                                     <TableCell className="font-medium">{expense.description}</TableCell>
                                     <TableCell><Badge variant="outline">{expense.category}</Badge></TableCell>
                                     <TableCell>{format(parseISO(expense.date), 'MMM d')}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(expense.amount, currency)}</TableCell>
                                 </TableRow>
                             )) : (
                                 <TableRow>
@@ -247,7 +244,7 @@ export default function DashboardPage() {
                                     <TableRow key={bill.id}>
                                         <TableCell className="font-medium">{bill.name}</TableCell>
                                         <TableCell>{daysUntilDue} days</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(bill.amount)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(bill.amount, currency)}</TableCell>
                                     </TableRow>
                                 );
                             }) : (
@@ -274,7 +271,7 @@ export default function DashboardPage() {
                             <div key={goal.id} className="grid gap-2">
                                 <div className="flex justify-between font-medium">
                                     <span>{goal.name}</span>
-                                    <span>{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</span>
+                                    <span>{formatCurrency(goal.currentAmount, currency)} / {formatCurrency(goal.targetAmount, currency)}</span>
                                 </div>
                                 <Progress value={progress} />
                             </div>

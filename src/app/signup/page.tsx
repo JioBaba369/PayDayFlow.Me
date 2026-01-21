@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth, useFirestore, initiateEmailSignUp } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { AuthLayout } from '@/components/layout/auth-layout';
+import { countries, currencies } from '@/lib/i18n';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const formSchema = z
   .object({
@@ -37,6 +45,8 @@ const formSchema = z
     email: z.string().email({ message: 'Please enter a valid email address.' }),
     password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
     confirmPassword: z.string(),
+    country: z.string({ required_error: 'Please select a country.' }),
+    currency: z.string({ required_error: 'Please select a currency.' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match.',
@@ -57,8 +67,21 @@ export default function SignupPage() {
       email: '',
       password: '',
       confirmPassword: '',
+      country: undefined,
+      currency: undefined,
     },
   });
+
+  const watchedCountry = form.watch('country');
+
+  useEffect(() => {
+    if (watchedCountry) {
+      const countryData = countries.find((c) => c.code === watchedCountry);
+      if (countryData?.currency) {
+        form.setValue('currency', countryData.currency);
+      }
+    }
+  }, [watchedCountry, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -79,6 +102,8 @@ export default function SignupPage() {
         email: user.email,
         firstName: values.firstName,
         lastName: values.lastName,
+        country: values.country,
+        currency: values.currency,
       });
 
       // AuthGuard will handle redirect once auth state updates and profile is found.
@@ -183,6 +208,55 @@ export default function SignupPage() {
                       <FormControl>
                         <Input {...field} type="password" disabled={isLoading} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {countries.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currencies.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.code} - {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

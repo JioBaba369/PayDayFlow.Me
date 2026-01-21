@@ -46,7 +46,7 @@ import { MoreHorizontal } from 'lucide-react';
 
 
 export default function BillsPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
@@ -102,6 +102,7 @@ export default function BillsPage() {
   }
 
   const isLoading = isUserLoading || areBillsLoading;
+  const currency = userProfile?.currency;
 
   const sortedBills = useMemo(() => {
     if (!bills) return [];
@@ -170,7 +171,7 @@ export default function BillsPage() {
                       ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrency(bill.amount)}</TableCell>
+                  <TableCell className="text-right font-medium">{formatCurrency(bill.amount, currency)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
