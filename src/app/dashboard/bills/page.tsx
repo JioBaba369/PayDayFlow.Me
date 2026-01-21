@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -51,6 +52,24 @@ export default function BillsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add-bill') {
+      handleOpenDialog();
+    }
+  }, [searchParams]);
+
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setEditingBill(null);
+      router.replace(pathname, { scroll: false });
+    }
+    setDialogOpen(open);
+  }
 
   const billsQuery = useMemo(() => {
     if (!firestore || !user) return null;
@@ -80,8 +99,7 @@ export default function BillsPage() {
       } else {
         await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/bills`), { ...billData, paid: false });
       }
-      setDialogOpen(false);
-      setEditingBill(null);
+      handleDialogChange(false);
     } catch (error) {
       console.error("Error submitting bill: ", error);
     } finally {
@@ -110,7 +128,7 @@ export default function BillsPage() {
   }, [bills]);
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <div>

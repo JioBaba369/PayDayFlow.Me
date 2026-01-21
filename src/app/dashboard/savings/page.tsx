@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -39,9 +40,28 @@ export default function SavingsPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore;
   
-  const [dialogState, setDialogState] = useState<{ type: 'goal' | 'funds'; isOpen: boolean }>({ type: 'goal', isOpen: false });
+  const [dialogState, setDialogState] = useState<{ type: 'goal' | 'funds' | null; isOpen: boolean }>({ type: null, isOpen: false });
   const [isSubmitting, setSubmitting] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add-goal') {
+      handleOpenGoalDialog();
+    }
+  }, [searchParams]);
+
+  const handleDialogChange = (open: boolean) => {
+    setDialogState(prev => ({ ...prev, isOpen: open }));
+    if (!open) {
+      setSelectedGoal(null);
+      setDialogState({ type: null, isOpen: false });
+      router.replace(pathname, { scroll: false });
+    }
+  }
 
   const savingsGoalsQuery = useMemo(() => {
     if (!firestore || !user) return null;
@@ -70,14 +90,13 @@ export default function SavingsPage() {
     };
 
     try {
-      if (selectedGoal) { // Editing existing goal
+      if (selectedGoal && dialogState.type === 'goal') { // Editing existing goal
         const goalRef = doc(firestore, `users/${user.uid}/savingsGoals/${selectedGoal.id}`);
         await updateDocumentNonBlocking(goalRef, { ...goalData, currentAmount: selectedGoal.currentAmount });
       } else { // Adding new goal
         await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/savingsGoals`), { ...goalData, currentAmount: 0 });
       }
-      setDialogState({ type: 'goal', isOpen: false });
-      setSelectedGoal(null);
+      handleDialogChange(false);
     } catch (error) {
       console.error("Error submitting goal: ", error);
     } finally {
@@ -93,8 +112,7 @@ export default function SavingsPage() {
 
     try {
       await updateDocumentNonBlocking(goalRef, { currentAmount: newCurrentAmount });
-      setDialogState({ type: 'funds', isOpen: false });
-      setSelectedGoal(null);
+      handleDialogChange(false);
     } catch (error) {
       console.error("Error updating document: ", error);
     } finally {
@@ -120,7 +138,7 @@ export default function SavingsPage() {
           </DialogHeader>
           <GoalForm onSubmit={handleGoalFormSubmit} isSubmitting={isSubmitting} initialData={selectedGoal} />
         </DialogContent>
-  ) : (
+  ) : dialogState.type === 'funds' ? (
        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Funds to "{selectedGoal?.name}"</DialogTitle>
@@ -130,10 +148,10 @@ export default function SavingsPage() {
           </DialogHeader>
           <AddFundsForm onSubmit={handleAddFunds} isSubmitting={isSubmitting} />
         </DialogContent>
-  );
+  ) : null;
 
   return (
-      <Dialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
+      <Dialog open={dialogState.isOpen} onOpenChange={handleDialogChange}>
         <div className="grid gap-6">
           <div className="flex justify-between items-start">
             <div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -22,6 +23,25 @@ export default function RunwayPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [editingStream, setEditingStream] = useState<IncomeStream | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add-income') {
+      handleOpenDialog();
+    }
+  }, [searchParams]);
+
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setEditingStream(null);
+      router.replace(pathname, { scroll: false });
+    }
+    setDialogOpen(open);
+  };
+
 
   // Queries
   const incomeQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/incomeStreams`), [firestore, user]);
@@ -88,8 +108,7 @@ export default function RunwayPage() {
         } else {
             await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/incomeStreams`), values);
         }
-        setDialogOpen(false);
-        setEditingStream(null);
+        handleDialogChange(false);
     } catch (error) {
         console.error("Error submitting income stream: ", error);
     } finally {
@@ -103,7 +122,7 @@ export default function RunwayPage() {
   }
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
     <div className="grid gap-6">
        <div>
           <h1 className="text-2xl font-bold tracking-tight font-headline">Personal Runway</h1>

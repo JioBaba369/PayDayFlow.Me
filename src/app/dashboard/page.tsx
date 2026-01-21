@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter
 } from '@/components/ui/card';
@@ -50,6 +51,23 @@ export default function DashboardPage() {
 
   const [isExpenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [isSubmittingExpense, setSubmittingExpense] = useState(false);
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add-expense') {
+      setExpenseDialogOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleExpenseDialogOpenChange = (open: boolean) => {
+    setExpenseDialogOpen(open);
+    if (!open) {
+      router.replace(pathname, { scroll: false });
+    }
+  }
 
   const ready = !!user && !!firestore && !isUserLoading;
   const currency = userProfile?.currency;
@@ -166,7 +184,7 @@ export default function DashboardPage() {
 
   // --- RENDER ---
   return (
-    <Dialog open={isExpenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
+    <Dialog open={isExpenseDialogOpen} onOpenChange={handleExpenseDialogOpenChange}>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
 

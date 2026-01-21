@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { StatCard } from '@/components/dashboard/stat-card';
 import {
   Card,
@@ -58,6 +59,27 @@ export default function NetWorthPage() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [isSnapshotting, setSnapshotting] = useState(false);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'add-asset') {
+      handleOpenDialog('asset');
+    } else if (action === 'add-liability') {
+      handleOpenDialog('liability');
+    }
+  }, [searchParams]);
+
+  const handleDialogChange = (open: boolean) => {
+    setDialogState(prev => ({ ...prev, isOpen: open }));
+    if (!open) {
+      setDialogState({ isOpen: false, type: null, data: null });
+      router.replace(pathname, { scroll: false });
+    }
+  }
+
   const assetsQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/assets`), [firestore, user]);
   const liabilitiesQuery = useMemo(() => !user ? null : collection(firestore, `users/${user.uid}/liabilities`), [firestore, user]);
   const netWorthQuery = useMemo(() => !user ? null : query(collection(firestore, `users/${user.uid}/netWorths`), orderBy('date', 'desc')), [firestore, user]);
@@ -104,7 +126,7 @@ export default function NetWorthPage() {
       } else { // Creating
         await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/${collectionName}`), itemData);
       }
-      setDialogState({ isOpen: false, type: null, data: null });
+      handleDialogChange(false);
     } catch (error) {
       console.error(`Error submitting ${type}:`, error);
     } finally {
@@ -130,7 +152,7 @@ export default function NetWorthPage() {
   }
 
   return (
-    <Dialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
+    <Dialog open={dialogState.isOpen} onOpenChange={handleDialogChange}>
       <div className="grid auto-rows-max items-start gap-4 md:gap-8">
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4">
           <StatCard

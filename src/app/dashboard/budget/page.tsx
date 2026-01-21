@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -34,6 +35,24 @@ export default function BudgetPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add-budget') {
+      handleOpenDialog();
+    }
+  }, [searchParams]);
+
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      setEditingBudget(null);
+      router.replace(pathname, { scroll: false });
+    }
+    setDialogOpen(open);
+  };
 
   const budgetsQuery = useMemo(() => {
     if (!user || !firestore) return null;
@@ -82,8 +101,7 @@ export default function BudgetPage() {
       } else {
         await addDocumentNonBlocking(collection(firestore, `users/${user.uid}/budgets`), values);
       }
-      setDialogOpen(false);
-      setEditingBudget(null);
+      handleDialogChange(false);
     } catch (error) {
       console.error("Error submitting budget: ", error);
     } finally {
@@ -100,7 +118,7 @@ export default function BudgetPage() {
   const currency = userProfile?.currency;
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
       <div className="grid gap-6">
         <Card>
           <CardHeader className="flex flex-row justify-between items-center">
