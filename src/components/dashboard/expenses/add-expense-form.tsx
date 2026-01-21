@@ -27,7 +27,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 
-const expenseCategories = ['Food', 'Transport', 'Entertainment', 'Housing', 'Utilities', 'Health', 'Shopping', 'Personal', 'Other'] as const;
+const expenseCategories = ['Food', 'Dining Out', 'Transportation', 'Household', 'Education', 'Health', 'Beauty', 'Gifts', 'Self-development', 'Entertainment', 'Other'] as const;
 
 const formSchema = z.object({
   description: z.string().min(2, {
@@ -69,7 +69,7 @@ export function AddExpenseForm({ onSubmit, isSubmitting }: AddExpenseFormProps) 
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Groceries" {...field} />
+                <Input placeholder="e.g., Weekly groceries" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
