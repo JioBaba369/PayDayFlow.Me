@@ -142,11 +142,11 @@ export default function BudgetPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                          <DropdownMenuItem onClick={() => handleOpenDialog(budget)}>
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDeleteBudget(budget.id)} className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

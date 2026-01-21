@@ -182,11 +182,11 @@ export default function BillsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                          <DropdownMenuItem onClick={() => handleOpenDialog(bill)}>
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDeleteBill(bill.id)} className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

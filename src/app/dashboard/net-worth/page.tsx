@@ -202,10 +202,10 @@ export default function NetWorthPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleOpenDialog('asset', asset)}>
-                              <Pencil className="mr-2 h-4 w-4" /> Edit
+                              <Pencil className="h-4 w-4" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete('assets', asset.id)} className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              <Trash2 className="h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -251,10 +251,10 @@ export default function NetWorthPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleOpenDialog('liability', liability)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Edit
+                                <Pencil className="h-4 w-4" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete('liabilities', liability.id)} className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              <Trash2 className="h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

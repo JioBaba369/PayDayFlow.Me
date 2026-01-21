@@ -195,15 +195,15 @@ export default function SavingsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                              <DropdownMenuItem onClick={() => handleOpenFundsDialog(goal)}>
-                              <Coins className="mr-2 h-4 w-4" />
+                              <Coins className="h-4 w-4" />
                               Add Funds
                             </DropdownMenuItem>
                              <DropdownMenuItem onClick={() => handleOpenGoalDialog(goal)}>
-                              <Pencil className="mr-2 h-4 w-4" />
+                              <Pencil className="h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDeleteGoal(goal.id)} className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                               Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>

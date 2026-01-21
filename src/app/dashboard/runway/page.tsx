@@ -123,7 +123,7 @@ export default function RunwayPage() {
                 <CardTitle>Income Streams</CardTitle>
                 <CardDescription>Your sources of monthly income.</CardDescription>
             </div>
-            <Button size="sm" onClick={() => handleOpenDialog()}><PlusCircle className="h-4 w-4 mr-2" />Add Income</Button>
+            <Button size="sm" onClick={() => handleOpenDialog()}><PlusCircle className="mr-2 h-4 w-4" />Add Income</Button>
           </CardHeader>
           <CardContent>
             <Table>
@@ -147,10 +147,10 @@ export default function RunwayPage() {
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleOpenDialog(stream)}>
-                                    <Pencil className="mr-2 h-4 w-4"/> Edit
+                                    <Pencil className="h-4 w-4"/> Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDelete(stream.id)} className="text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                    <Trash2 className="h-4 w-4"/> Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
