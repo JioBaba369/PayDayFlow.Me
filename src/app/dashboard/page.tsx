@@ -156,8 +156,8 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
           <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills, currency)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
-          <StatCard title="Goal Progress" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={savingsProgressDescription} />
           <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average spend per day this month" />
+          <StatCard title="Goal Progress" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={savingsProgressDescription} />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
