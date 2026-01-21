@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -27,6 +28,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import type { Expense } from '@/lib/types';
+import { DatePickerPresets } from '@/components/ui/date-picker-presets';
 
 const expenseCategories = ['Food', 'Dining Out', 'Transportation', 'Household', 'Education', 'Health', 'Beauty', 'Gifts', 'Self-development', 'Entertainment', 'Other'] as const;
 
@@ -52,6 +54,7 @@ type ExpenseFormProps = {
 };
 
 export function ExpenseForm({ onSubmit, isSubmitting, initialData }: ExpenseFormProps) {
+  const [datePickerOpen, setDatePickerOpen] = React.useState(false);
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -119,7 +122,7 @@ export function ExpenseForm({ onSubmit, isSubmitting, initialData }: ExpenseForm
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Date</FormLabel>
-              <Popover>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -142,7 +145,12 @@ export function ExpenseForm({ onSubmit, isSubmitting, initialData }: ExpenseForm
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => {
+                      if(date) {
+                        field.onChange(date)
+                      }
+                      setDatePickerOpen(false);
+                    }}
                     disabled={(date) =>
                       date > new Date() || date < new Date("2000-01-01")
                     }
@@ -150,6 +158,13 @@ export function ExpenseForm({ onSubmit, isSubmitting, initialData }: ExpenseForm
                     toYear={new Date().getFullYear()}
                     toDate={new Date()}
                     initialFocus
+                  />
+                  <DatePickerPresets
+                    presets={['today', 'yesterday', '7-days-ago']}
+                    onSelect={(date) => {
+                        field.onChange(date);
+                        setDatePickerOpen(false);
+                    }}
                   />
                 </PopoverContent>
               </Popover>
