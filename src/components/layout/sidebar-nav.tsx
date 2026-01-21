@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Plane,
   Sparkles,
+  User,
+  Settings,
 } from 'lucide-react';
 
 import {
@@ -26,6 +28,8 @@ const navItems = [
   { href: '/dashboard/net-worth', icon: TrendingUp, label: 'Net Worth' },
   { href: '/dashboard/runway', icon: Plane, label: 'Runway' },
   { href: '/dashboard/insights', icon: Sparkles, label: 'Insights' },
+  { href: '/dashboard/profile', icon: User, label: 'Profile' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function SidebarNav() {

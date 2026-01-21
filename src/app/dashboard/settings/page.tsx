@@ -1,0 +1,45 @@
+'use client';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+
+
+export default function SettingsPage() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Settings</CardTitle>
+        <CardDescription>
+          Manage your application settings. (Functionality coming soon)
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-6">
+        <div className="flex items-center justify-between space-x-2">
+            <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
+                <span>Dark Mode</span>
+                <span className="font-normal leading-snug text-muted-foreground">
+                    Toggle dark mode for the application.
+                </span>
+            </Label>
+            <Switch id="dark-mode" disabled />
+        </div>
+         <div className="flex items-center justify-between space-x-2">
+            <Label htmlFor="notifications" className="flex flex-col space-y-1">
+                <span>Email Notifications</span>
+                <span className="font-normal leading-snug text-muted-foreground">
+                    Receive email notifications for important events.
+                </span>
+            </Label>
+            <Switch id="notifications" disabled />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
