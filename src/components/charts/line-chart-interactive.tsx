@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/card';
 import {
   ChartContainer,
-  ChartTooltipContent,
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import type { NetWorthHistoryPoint } from '@/lib/types';
@@ -29,7 +28,7 @@ type LineChartInteractiveProps = {
   currency?: string;
   title: string;
   description: string;
-  footerText: string;
+  action?: React.ReactNode;
 };
 
 const CustomTooltip = ({ active, payload, label, currency }: any) => {
@@ -67,7 +66,7 @@ export function LineChartInteractive({
   currency,
   title,
   description,
-  footerText,
+  action,
 }: LineChartInteractiveProps) {
   const chartConfig = {
     netWorth: {
@@ -78,9 +77,12 @@ export function LineChartInteractive({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        {action}
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
