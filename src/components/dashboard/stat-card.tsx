@@ -23,7 +23,7 @@ export function StatCard({ title, value, description, icon, children }: StatCard
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {description && <div className="text-xs text-muted-foreground">{description}</div>}
         {children && <div className="h-[80px] pt-4">{children}</div>}
       </CardContent>
     </Card>
