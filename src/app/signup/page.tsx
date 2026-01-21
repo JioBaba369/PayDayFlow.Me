@@ -82,12 +82,6 @@ export default function SignupPage() {
         userProfileId: user.uid,
       });
 
-
-      toast({
-        title: 'Account created 🎉',
-        description: 'Welcome to PayDayFlow! Redirecting you to the dashboard.',
-      });
-
       // AuthGuard will handle redirect once auth state updates and profile is found.
     } catch (error: any) {
       let description = 'An unexpected error occurred. Please try again.';

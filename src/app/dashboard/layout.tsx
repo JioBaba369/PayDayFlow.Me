@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Header } from '@/components/layout/header';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import {
@@ -28,7 +29,7 @@ export default function DashboardLayout({
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  const handleIdle = async () => {
+  const handleIdle = useCallback(async () => {
     try {
       await signOut(auth);
       toast({
@@ -39,7 +40,7 @@ export default function DashboardLayout({
     } catch (error) {
       console.error('Sign out failed:', error);
     }
-  };
+  }, [auth, router, toast]);
 
   const IDLE_TIMEOUT = 15 * 60 * 1000;
 
@@ -88,4 +89,3 @@ export default function DashboardLayout({
     </ProfileCompletionGuard>
   );
 }
-
