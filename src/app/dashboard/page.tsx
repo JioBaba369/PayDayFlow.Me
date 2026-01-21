@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter
 } from '@/components/ui/card';
@@ -14,17 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { formatCurrency } from '@/lib/utils';
-import { useUser, useCollection, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useCollection } from '@/firebase';
 import { collection, query, where, limit, orderBy, Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
 import type { Bill, SavingsGoal, Expense, Asset } from '@/lib/types';
-import { differenceInDays, parseISO, startOfMonth, format, endOfMonth } from 'date-fns';
+import { differenceInDays, parseISO, startOfMonth, format } from 'date-fns';
 import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
-} from '@/components/ui/dialog';
-import { ExpenseForm, type ExpenseFormValues } from '@/components/dashboard/expenses/expense-form';
 
 function DashboardSkeleton() {
   return (
@@ -48,26 +43,6 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const { user, userProfile, isUserLoading } = useUser();
   const firestore = useFirestore() as Firestore | null;
-
-  const [isExpenseDialogOpen, setExpenseDialogOpen] = useState(false);
-  const [isSubmittingExpense, setSubmittingExpense] = useState(false);
-  
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (searchParams.get('action') === 'add-expense') {
-      setExpenseDialogOpen(true);
-    }
-  }, [searchParams]);
-
-  const handleExpenseDialogOpenChange = (open: boolean) => {
-    setExpenseDialogOpen(open);
-    if (!open) {
-      router.replace(pathname, { scroll: false });
-    }
-  }
 
   const ready = !!user && !!firestore && !isUserLoading;
   const currency = userProfile?.currency;
@@ -163,24 +138,6 @@ export default function DashboardPage() {
       percent: target > 0 ? (current / target) * 100 : 0,
     };
   }, [goals]);
-
-  // --- EVENTS ---
-  async function handleAddExpense(values: ExpenseFormValues) {
-    if (!ready) return;
-    setSubmittingExpense(true);
-    try {
-      await addDocumentNonBlocking(
-        collection(firestore!, `users/${user!.uid}/expenses`),
-        {
-          ...values,
-          date: values.date.toISOString(),
-        }
-      );
-      setExpenseDialogOpen(false);
-    } finally {
-      setSubmittingExpense(false);
-    }
-  }
   
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -188,7 +145,6 @@ export default function DashboardPage() {
 
   // --- RENDER ---
   return (
-    <Dialog open={isExpenseDialogOpen} onOpenChange={handleExpenseDialogOpenChange}>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
 
@@ -206,9 +162,11 @@ export default function DashboardPage() {
                         <CardTitle>Recent Expenses</CardTitle>
                         <CardDescription>This month's latest transactions.</CardDescription>
                     </div>
-                    <Button onClick={() => setExpenseDialogOpen(true)}>
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add Expense
+                    <Button asChild>
+                        <Link href="/dashboard/expenses/add">
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            Add Expense
+                        </Link>
                     </Button>
                 </CardHeader>
                 <CardContent>
@@ -319,13 +277,5 @@ export default function DashboardPage() {
 
         </div>
       </div>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Expense</DialogTitle>
-        </DialogHeader>
-        <ExpenseForm onSubmit={handleAddExpense} isSubmitting={isSubmittingExpense} initialData={null} />
-      </DialogContent>
-    </Dialog>
   );
 }
