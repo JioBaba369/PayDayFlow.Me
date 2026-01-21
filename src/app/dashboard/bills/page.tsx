@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency, cn } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
-import { PlusCircle, Trash2, Pencil, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, Trash2, Pencil, MoreHorizontal, RotateCw } from 'lucide-react';
 import { useUser, useCollection, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
@@ -34,6 +34,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 
 export default function BillsPage() {
@@ -59,6 +70,16 @@ export default function BillsPage() {
     deleteDocumentNonBlocking(billRef);
   }
 
+  function handleResetBills() {
+    if (!user || !firestore || !bills) return;
+    bills.forEach(bill => {
+      if (bill.paid) {
+        const billRef = doc(firestore, `users/${user.uid}/bills/${bill.id}`);
+        updateDocumentNonBlocking(billRef, { paid: false });
+      }
+    });
+  }
+
   const isLoading = isUserLoading || areBillsLoading;
   const currency = userProfile?.currency;
 
@@ -76,12 +97,36 @@ export default function BillsPage() {
               Manage all your recurring and upcoming payments.
             </CardDescription>
           </div>
-          <Button asChild>
-            <Link href="/dashboard/bills/add">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Bill
-            </Link>
-          </Button>
+           <div className="flex items-center gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <RotateCw className="mr-2 h-4 w-4" />
+                  Reset Bills
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset All Bills?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will mark all your bills as unpaid. This is usually done at the start of a new month or billing cycle.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleResetBills}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button asChild>
+              <Link href="/dashboard/bills/add">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Bill
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
