@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { ThemeSwitch } from '@/components/dashboard/settings/theme-switch';
 
 
 export default function SettingsPage() {
@@ -17,24 +18,16 @@ export default function SettingsPage() {
       <CardHeader>
         <CardTitle>Settings</CardTitle>
         <CardDescription>
-          Manage your application settings. (Functionality coming soon)
+          Manage your application settings.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
-        <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
-                <span>Dark Mode</span>
-                <span className="font-normal leading-snug text-muted-foreground">
-                    Toggle dark mode for the application.
-                </span>
-            </Label>
-            <Switch id="dark-mode" disabled />
-        </div>
+        <ThemeSwitch />
          <div className="flex items-center justify-between space-x-2">
             <Label htmlFor="notifications" className="flex flex-col space-y-1">
                 <span>Email Notifications</span>
                 <span className="font-normal leading-snug text-muted-foreground">
-                    Receive email notifications for important events.
+                    Receive email notifications for important events. (Functionality coming soon)
                 </span>
             </Label>
             <Switch id="notifications" disabled />

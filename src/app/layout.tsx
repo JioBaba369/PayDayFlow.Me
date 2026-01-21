@@ -5,6 +5,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const fontInter = Inter({
   subsets: ['latin'],
@@ -19,8 +20,8 @@ const fontPTSans = PT_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: 'FinDash',
-    template: '%s | FinDash',
+    default: 'PayDayFlow.me',
+    template: '%s | PayDayFlow.me',
   },
   description: 'Your personal finance dashboard.',
 };
@@ -39,10 +40,17 @@ export default function RootLayout({
           fontPTSans.variable,
         )}
       >
-        <FirebaseClientProvider>
-          {children}
-        </FirebaseClientProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
