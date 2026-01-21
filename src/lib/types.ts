@@ -3,8 +3,7 @@ export type UserProfile = {
   email: string;
   firstName: string;
   lastName: string;
-  userProfileId: string;
-}
+};
 
 export type Bill = {
   id: string;
@@ -12,7 +11,7 @@ export type Bill = {
   amount: number;
   dueDate: string;
   paid: boolean;
-  category: 'Housing' | 'Utilities' | 'Internet' | 'Mobile' | 'Subscriptions' | 'Insurance' | 'Transport' | 'Healthcare' | 'Loan Payment' | 'Other';
+  category: 'Electricity' | 'Gas' | 'Gym' | 'Health Insurance' | 'Housing' | 'Internet' | 'Loan Payment' | 'Mobile' | 'Subscriptions' | 'Water' | 'Other';
 };
 
 export type BudgetDoc = {
@@ -22,7 +21,7 @@ export type BudgetDoc = {
 };
 
 export type Budget = {
-  id: string;
+  id:string;
   category: string;
   allocated: number;
   spent: number;
@@ -69,6 +68,7 @@ export type NetWorthHistoryPoint = {
   date: string;
   netWorth: number;
 };
+
 
 export type IncomeStream = {
   id: string;

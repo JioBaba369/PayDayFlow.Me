@@ -28,7 +28,7 @@ import { format, parseISO } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import type { Bill } from '@/lib/types';
 
-const billCategories = ['Housing', 'Utilities', 'Internet', 'Mobile', 'Subscriptions', 'Insurance', 'Transport', 'Healthcare', 'Loan Payment', 'Other'] as const;
+const billCategories = ['Electricity', 'Gas', 'Gym', 'Health Insurance', 'Housing', 'Internet', 'Loan Payment', 'Mobile', 'Subscriptions', 'Water', 'Other'] as const;
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -72,7 +72,7 @@ export function BillForm({ onSubmit, isSubmitting, initialData }: BillFormProps)
             <FormItem>
               <FormLabel>Bill Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Netflix" {...field} />
+                <Input placeholder="e.g., Internet Bill" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
