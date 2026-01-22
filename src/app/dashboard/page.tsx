@@ -16,9 +16,9 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { useUser, useCollection } from '@/firebase';
 import { collection, query, where, limit, orderBy, Firestore } from 'firebase/firestore';
 import { useFirestore } from '@/firebase/provider';
-import type { Bill, SavingsGoal, Expense, Asset } from '@/lib/types';
+import type { Bill, SavingsGoal, Expense, Asset, IncomeStream } from '@/lib/types';
 import { differenceInDays, parseISO, startOfMonth, format } from 'date-fns';
-import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight } from 'lucide-react';
+import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight, TrendingDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function DashboardSkeleton() {
@@ -48,7 +48,6 @@ export default function DashboardPage() {
   const currency = userProfile?.currency;
 
   // --- SAFE QUERIES ---
-  // Fetch all bills and filter/sort on the client to avoid composite index requirement.
   const billsQuery = useMemo(() => {
     if (!ready) return undefined;
     return collection(firestore!, `users/${user!.uid}/bills`);
@@ -80,22 +79,29 @@ export default function DashboardPage() {
     );
   }, [ready, firestore, user]);
 
+  const incomeStreamsQuery = useMemo(() => {
+    if (!ready) return undefined;
+    return collection(firestore!, `users/${user!.uid}/incomeStreams`);
+  }, [ready, firestore, user]);
+
+
   // --- DATA FETCHING (SAFE) ---
   const {data: allBills, isLoading: areBillsLoading} = useCollection<Bill>(billsQuery);
   const {data: goals, isLoading: areGoalsLoading} = useCollection<SavingsGoal>(savingsGoalsQuery);
   const {data: expenses, isLoading: areExpensesLoading} = useCollection<Expense>(expensesQuery);
   const {data: assets, isLoading: areAssetsLoading} = useCollection<Asset>(assetsQuery);
+  const {data: incomeStreams, isLoading: areIncomeStreamsLoading} = useCollection<IncomeStream>(incomeStreamsQuery);
 
   const isLoading =
     isUserLoading ||
     areBillsLoading ||
     areGoalsLoading ||
     areExpensesLoading ||
-    areAssetsLoading;
+    areAssetsLoading ||
+    areIncomeStreamsLoading;
 
   // --- DERIVED DATA ---
   
-  // Filter and sort bills on the client
   const unpaidBills = useMemo(() => {
     if (!allBills) return [];
     return allBills
@@ -107,8 +113,26 @@ export default function DashboardPage() {
   const cashLeft = assets?.reduce((s, a) => s + a.value, 0) ?? 0;
   const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
   
+  const totalMonthlyIncome = useMemo(() => {
+    if (!incomeStreams) return 0;
+    return incomeStreams.reduce((sum, stream) => {
+      switch (stream.schedule) {
+        case 'Weekly': return sum + (stream.amount * 52 / 12);
+        case 'Bi-Weekly': return sum + (stream.amount * 26 / 12);
+        case 'Semi-Monthly': return sum + stream.amount * 2;
+        case 'Monthly': return sum + stream.amount;
+        case 'Quarterly': return sum + stream.amount / 3;
+        case 'Semi-Annually': return sum + stream.amount / 6;
+        case 'Yearly': return sum + stream.amount / 12;
+        case 'One-Time': return sum;
+        default: return sum;
+      }
+    }, 0);
+  }, [incomeStreams]);
+
   const dayOfMonth = new Date().getDate();
   const spendingPace = dayOfMonth > 0 ? totalMonthlySpending / dayOfMonth : 0;
+  const incomePace = dayOfMonth > 0 ? totalMonthlyIncome / dayOfMonth : 0;
 
   const upcomingBills = unpaidBills?.slice(0, 5) ?? [];
 
@@ -126,24 +150,6 @@ export default function DashboardPage() {
       .reduce((sum, bill) => sum + bill.amount, 0);
   }, [unpaidBills]);
 
-  const savingsProgress = useMemo(() => {
-    if (!goals || goals.length === 0) return { current: 0, target: 0, percent: 0};
-    const current = goals.reduce((s, g) => s + g.currentAmount, 0);
-    const target = goals.reduce((s, g) => s + g.targetAmount, 0);
-    return {
-      current,
-      target,
-      percent: target > 0 ? (current / target) * 100 : 0,
-    };
-  }, [goals]);
-
-  const savingsProgressDescription = useMemo(() => {
-    if (!goals || goals.length === 0 || savingsProgress.target === 0) {
-        return 'No goals set yet';
-    }
-    return `Towards ${formatCurrency(savingsProgress.target, currency)} target`;
-  }, [goals, savingsProgress.target, currency]);
-  
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -155,9 +161,9 @@ export default function DashboardPage() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
+          <StatCard title="Daily Income Pace" value={formatCurrency(incomePace, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description="Average income per day this month" />
+          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />} description="Average spend per day this month" />
           <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills, currency)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
-          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} description="Average spend per day this month" />
-          <StatCard title="Goal Progress" value={formatCurrency(savingsProgress.current, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description={savingsProgressDescription} />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
