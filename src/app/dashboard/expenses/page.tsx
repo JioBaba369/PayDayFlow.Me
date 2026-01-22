@@ -33,6 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CategoryIcon } from '@/components/dashboard/category-icon';
 
 
 export default function ExpensesPage() {
@@ -104,7 +105,10 @@ export default function ExpensesPage() {
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">{expense.description}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{expense.category}</Badge>
+                    <Badge variant="outline" className="gap-1.5 font-normal">
+                      <CategoryIcon category={expense.category} className="h-3.5 w-3.5" />
+                      <span>{expense.category}</span>
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     {format(parseISO(expense.date), 'PPP')}

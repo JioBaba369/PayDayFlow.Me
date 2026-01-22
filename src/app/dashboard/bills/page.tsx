@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { CategoryIcon } from '@/components/dashboard/category-icon';
 
 
 export default function BillsPage() {
@@ -163,7 +164,10 @@ export default function BillsPage() {
                   </TableCell>
                   <TableCell className="font-medium">{bill.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{bill.category}</Badge>
+                    <Badge variant="outline" className="gap-1.5 font-normal">
+                      <CategoryIcon category={bill.category} className="h-3.5 w-3.5" />
+                      <span>{bill.category}</span>
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">

@@ -20,6 +20,7 @@ import type { Budget, BudgetDoc, Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CategoryIcon } from '@/components/dashboard/category-icon';
 
 export default function BudgetPage() {
   const { user, userProfile, isUserLoading } = useUser();
@@ -98,7 +99,10 @@ export default function BudgetPage() {
               return (
                 <div key={budget.id} className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">{budget.category}</span>
+                    <span className="font-medium flex items-center gap-2">
+                      <CategoryIcon category={budget.category} className="h-4 w-4 text-muted-foreground" />
+                      {budget.category}
+                    </span>
                      <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">

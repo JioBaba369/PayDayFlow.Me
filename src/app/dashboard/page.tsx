@@ -20,6 +20,7 @@ import type { Bill, SavingsGoal, Expense, Asset, IncomeStream } from '@/lib/type
 import { differenceInDays, parseISO, startOfMonth, format } from 'date-fns';
 import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight, TrendingDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CategoryIcon } from '@/components/dashboard/category-icon';
 
 function DashboardSkeleton() {
   return (
@@ -194,7 +195,12 @@ export default function DashboardPage() {
                             {recentExpenses.length > 0 ? recentExpenses.map((expense) => (
                                 <TableRow key={expense.id}>
                                     <TableCell className="font-medium">{expense.description}</TableCell>
-                                    <TableCell><Badge variant="outline">{expense.category}</Badge></TableCell>
+                                    <TableCell>
+                                      <Badge variant="outline" className="gap-1.5 font-normal">
+                                        <CategoryIcon category={expense.category} className="h-3.5 w-3.5" />
+                                        <span>{expense.category}</span>
+                                      </Badge>
+                                    </TableCell>
                                     <TableCell>{format(parseISO(expense.date), 'MMM d')}</TableCell>
                                     <TableCell className="text-right">{formatCurrency(expense.amount, currency)}</TableCell>
                                 </TableRow>
