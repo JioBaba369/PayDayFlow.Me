@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { useAuth, useUser } from '@/firebase';
 import { ProfileCompletionGuard } from '@/components/layout/profile-completion-guard';
+import { AddMenuFab } from '@/components/layout/add-menu-fab';
 
 type DashboardLayoutProps = PropsWithChildren;
 
@@ -81,6 +82,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </main>
           </SidebarInset>
 
+          <AddMenuFab />
           <BottomNav />
         </SidebarProvider>
       )}
