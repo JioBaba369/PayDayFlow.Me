@@ -14,11 +14,12 @@ export default function EditExpensePage({ params }: { params: { id: string }}) {
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const expenseRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/expenses/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/expenses/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingExpense, isLoading: isExpenseLoading } = useDoc<Expense>(expenseRef);
 

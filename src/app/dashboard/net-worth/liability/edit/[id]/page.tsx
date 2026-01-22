@@ -14,11 +14,12 @@ export default function EditLiabilityPage({ params }: { params: { id: string }})
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const liabilityRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/liabilities/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/liabilities/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingLiability, isLoading: isLiabilityLoading } = useDoc<Liability>(liabilityRef);
 

@@ -14,11 +14,12 @@ export default function EditBudgetPage({ params }: { params: { id: string }}) {
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const budgetRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/budgets/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/budgets/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingBudget, isLoading: isBudgetLoading } = useDoc<BudgetDoc>(budgetRef);
 

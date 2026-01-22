@@ -14,11 +14,12 @@ export default function EditIncomePage({ params }: { params: { id: string }}) {
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const incomeRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/incomeStreams/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/incomeStreams/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingIncome, isLoading: isIncomeLoading } = useDoc<IncomeStream>(incomeRef);
 

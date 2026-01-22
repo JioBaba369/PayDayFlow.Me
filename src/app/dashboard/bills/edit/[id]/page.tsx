@@ -14,11 +14,12 @@ export default function EditBillPage({ params }: { params: { id: string }}) {
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const billRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/bills/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/bills/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingBill, isLoading: isBillLoading } = useDoc<Bill>(billRef);
 

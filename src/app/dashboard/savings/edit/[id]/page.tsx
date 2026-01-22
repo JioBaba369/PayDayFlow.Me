@@ -14,11 +14,12 @@ export default function EditGoalPage({ params }: { params: { id: string }}) {
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const goalRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/savingsGoals/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/savingsGoals/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingGoal, isLoading: isGoalLoading } = useDoc<SavingsGoal>(goalRef);
 

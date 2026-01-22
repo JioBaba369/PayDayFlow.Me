@@ -14,11 +14,12 @@ export default function EditAssetPage({ params }: { params: { id: string }}) {
     const firestore = useFirestore() as Firestore;
     const router = useRouter();
     const [isSubmitting, setSubmitting] = useState(false);
+    const { id } = params;
 
     const assetRef = useMemo(() => {
         if (!user || !firestore) return null;
-        return doc(firestore, `users/${user.uid}/assets/${params.id}`);
-    }, [user, firestore, params.id]);
+        return doc(firestore, `users/${user.uid}/assets/${id}`);
+    }, [user, firestore, id]);
 
     const { data: editingAsset, isLoading: isAssetLoading } = useDoc<Asset>(assetRef);
 
