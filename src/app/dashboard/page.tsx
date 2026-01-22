@@ -18,7 +18,7 @@ import { collection, query, where, limit, orderBy, Firestore } from 'firebase/fi
 import { useFirestore } from '@/firebase/provider';
 import type { Bill, SavingsGoal, Expense, Asset, IncomeStream } from '@/lib/types';
 import { differenceInDays, parseISO, startOfMonth, format } from 'date-fns';
-import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight, TrendingDown } from 'lucide-react';
+import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight, TrendingDown, CreditCard } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategoryIcon } from '@/components/dashboard/category-icon';
 import { Separator } from '@/components/ui/separator';
@@ -111,6 +111,46 @@ export default function DashboardPage() {
 
   // --- DERIVED DATA ---
   
+  const {
+    cashLeft,
+    totalMonthlyIncome,
+    totalMonthlyFixedExpenses,
+    totalMonthlyVariableExpenses,
+    savingsVelocity,
+  } = useMemo(() => {
+    const cash = assets?.reduce((s, a) => s + a.value, 0) ?? 0;
+    
+    const income = incomeStreams?.reduce((sum, stream) => {
+        switch (stream.schedule) {
+            case 'Weekly': return sum + (stream.amount * 52 / 12);
+            case 'Bi-Weekly': return sum + (stream.amount * 26 / 12);
+            case 'Semi-Monthly': return sum + stream.amount * 2;
+            case 'Monthly': return sum + stream.amount;
+            case 'Quarterly': return sum + stream.amount / 3;
+            case 'Semi-Annually': return sum + stream.amount / 6;
+            case 'Yearly': return sum + stream.amount / 12;
+            case 'One-Time': return sum; // We can decide how to handle this, for now, we ignore for monthly velocity
+            default: return sum;
+        }
+    }, 0) ?? 0;
+
+    const fixed = allBills?.reduce((sum, bill) => sum + bill.amount, 0) ?? 0;
+    
+    const variable = expenses?.reduce((sum, exp) => sum + exp.amount, 0) ?? 0;
+
+    const velocity = income - (fixed + variable);
+
+    return {
+        cashLeft: cash,
+        totalMonthlyIncome: income,
+        totalMonthlyFixedExpenses: fixed,
+        totalMonthlyVariableExpenses: variable,
+        savingsVelocity: velocity,
+    };
+  }, [assets, incomeStreams, allBills, expenses]);
+  
+  const totalMonthlyExpenses = totalMonthlyFixedExpenses + totalMonthlyVariableExpenses;
+  
   const unpaidBills = useMemo(() => {
     if (!allBills) return [];
     return allBills
@@ -119,45 +159,7 @@ export default function DashboardPage() {
   }, [allBills]);
 
   const recentExpenses = expenses?.slice(0, 5) ?? [];
-  const cashLeft = assets?.reduce((s, a) => s + a.value, 0) ?? 0;
-  const totalMonthlySpending = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0;
-  
-  const totalMonthlyIncome = useMemo(() => {
-    if (!incomeStreams) return 0;
-    return incomeStreams.reduce((sum, stream) => {
-      switch (stream.schedule) {
-        case 'Weekly': return sum + (stream.amount * 52 / 12);
-        case 'Bi-Weekly': return sum + (stream.amount * 26 / 12);
-        case 'Semi-Monthly': return sum + stream.amount * 2;
-        case 'Monthly': return sum + stream.amount;
-        case 'Quarterly': return sum + stream.amount / 3;
-        case 'Semi-Annually': return sum + stream.amount / 6;
-        case 'Yearly': return sum + stream.amount / 12;
-        case 'One-Time': return sum;
-        default: return sum;
-      }
-    }, 0);
-  }, [incomeStreams]);
-
-  const dayOfMonth = new Date().getDate();
-  const spendingPace = dayOfMonth > 0 ? totalMonthlySpending / dayOfMonth : 0;
-  const incomePace = dayOfMonth > 0 ? totalMonthlyIncome / dayOfMonth : 0;
-
   const upcomingBills = unpaidBills?.slice(0, 5) ?? [];
-
-  const totalUpcomingBills = useMemo(() => {
-    if (!unpaidBills) return 0;
-    const now = new Date();
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
-
-    return unpaidBills
-      .filter(bill => {
-        const dueDate = parseISO(bill.dueDate);
-        return dueDate >= now && dueDate <= thirtyDaysFromNow;
-      })
-      .reduce((sum, bill) => sum + bill.amount, 0);
-  }, [unpaidBills]);
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -182,10 +184,34 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
-          <StatCard title="Daily Income Pace" value={formatCurrency(incomePace, currency)} icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} description="Average income per day this month" />
-          <StatCard title="Daily Spending Pace" value={formatCurrency(spendingPace, currency)} icon={<TrendingDown className="h-4 w-4 text-muted-foreground" />} description="Average spend per day this month" />
-          <StatCard title="Upcoming Bills" value={formatCurrency(totalUpcomingBills, currency)} icon={<Calendar className="h-4 w-4 text-muted-foreground" />} description="In the next 30 days" />
+          <StatCard 
+            title="Savings Velocity" 
+            value={
+              <span className={cn(savingsVelocity >= 0 ? 'text-[hsl(var(--chart-2))]' : 'text-destructive')}>
+                {formatCurrency(savingsVelocity, currency)}
+              </span>
+            } 
+            icon={savingsVelocity >= 0 ? <TrendingUp className="h-4 w-4 text-muted-foreground" /> : <TrendingDown className="h-4 w-4 text-muted-foreground" />}
+            description="Monthly income minus expenses" 
+          />
+          <StatCard 
+            title="Monthly Income" 
+            value={formatCurrency(totalMonthlyIncome, currency)} 
+            icon={<DollarSign className="h-4 w-4 text-muted-foreground" />} 
+            description="Total from all income streams" 
+          />
+           <StatCard 
+            title="Monthly Expenses" 
+            value={formatCurrency(totalMonthlyExpenses, currency)} 
+            icon={<CreditCard className="h-4 w-4 text-muted-foreground" />} 
+            description={`Fixed: ${formatCurrency(totalMonthlyFixedExpenses, currency)}`}
+          />
+          <StatCard 
+            title="Cash on Hand" 
+            value={formatCurrency(cashLeft, currency)} 
+            icon={<Wallet className="h-4 w-4 text-muted-foreground" />} 
+            description="Across all cash accounts" 
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -316,7 +342,7 @@ export default function DashboardPage() {
                         )
                     }) : (
                         <div className="text-center text-muted-foreground py-8">
-                            No savings goals set up yet. <Link href="/dashboard/savings" className="underline text-primary">Add one now</Link>.
+                            No savings goals set up yet. <Link href="/dashboard/savings/add" className="underline text-primary">Add one now</Link>.
                         </div>
                      )}
                 </CardContent>
