@@ -229,37 +229,60 @@ export default function DashboardPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {recentExpenses.length > 0 ? recentExpenses.map((expense) => (
-                                <TableRow key={expense.id}>
-                                    <TableCell className="font-medium">{expense.description}</TableCell>
-                                    <TableCell>
-                                      <Badge variant="outline" className="gap-1.5 font-normal">
-                                        <CategoryIcon category={expense.category} className="h-3.5 w-3.5" />
-                                        <span>{expense.category}</span>
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell>{format(parseISO(expense.date), 'MMM d')}</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(expense.amount, currency)}</TableCell>
-                                </TableRow>
-                            )) : (
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        No expenses logged this month.
-                                    </TableCell>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {recentExpenses.length > 0 ? recentExpenses.map((expense) => (
+                                    <TableRow key={expense.id}>
+                                        <TableCell className="font-medium">{expense.description}</TableCell>
+                                        <TableCell>
+                                        <Badge variant="outline" className="gap-1.5 font-normal">
+                                            <CategoryIcon category={expense.category} className="h-3.5 w-3.5" />
+                                            <span>{expense.category}</span>
+                                        </Badge>
+                                        </TableCell>
+                                        <TableCell>{format(parseISO(expense.date), 'MMM d')}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(expense.amount, currency)}</TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            No expenses logged this month.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="md:hidden space-y-4">
+                        {recentExpenses.length > 0 ? recentExpenses.map(expense => (
+                            <div key={expense.id} className="flex items-center justify-between">
+                                <div className="grid gap-1">
+                                    <p className="font-medium">{expense.description}</p>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                       <Badge variant="outline" className="gap-1.5 font-normal">
+                                            <CategoryIcon category={expense.category} className="h-3.5 w-3.5" />
+                                            <span>{expense.category}</span>
+                                        </Badge>
+                                        <span>{format(parseISO(expense.date), 'MMM d')}</span>
+                                    </div>
+                                </div>
+                                <p className="font-medium">{formatCurrency(expense.amount, currency)}</p>
+                            </div>
+                        )) : (
+                            <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+                                No expenses logged this month.
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 
@@ -279,47 +302,79 @@ export default function DashboardPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                           {upcomingBills && upcomingBills.length > 0 ? upcomingBills.map((bill) => {
-                                const dueDate = parseISO(bill.dueDate);
-                                const daysUntilDue = differenceInDays(dueDate, new Date());
-                                const isOverdue = daysUntilDue < 0;
-
-                                let dueDateText;
-                                if (isOverdue) {
-                                    dueDateText = <span className="text-destructive">{Math.abs(daysUntilDue)} days overdue</span>;
-                                } else if (daysUntilDue === 0) {
-                                    dueDateText = <span>Due today</span>;
-                                } else if (daysUntilDue === 1) {
-                                    dueDateText = <span>1 day left</span>;
-                                } else {
-                                    dueDateText = <span>{daysUntilDue} days left</span>;
-                                }
-
-                                return (
-                                    <TableRow key={bill.id}>
-                                        <TableCell className="font-medium">{bill.name}</TableCell>
-                                        <TableCell>{dueDateText}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(bill.amount, currency)}</TableCell>
-                                    </TableRow>
-                                );
-                            }) : (
+                     <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={3} className="h-24 text-center">
-                                        No upcoming bills.
-                                    </TableCell>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                            {upcomingBills && upcomingBills.length > 0 ? upcomingBills.map((bill) => {
+                                    const dueDate = parseISO(bill.dueDate);
+                                    const daysUntilDue = differenceInDays(dueDate, new Date());
+                                    const isOverdue = daysUntilDue < 0;
+
+                                    let dueDateText;
+                                    if (isOverdue) {
+                                        dueDateText = <span className="text-destructive">{Math.abs(daysUntilDue)} days overdue</span>;
+                                    } else if (daysUntilDue === 0) {
+                                        dueDateText = <span>Due today</span>;
+                                    } else if (daysUntilDue === 1) {
+                                        dueDateText = <span>1 day left</span>;
+                                    } else {
+                                        dueDateText = <span>{daysUntilDue} days left</span>;
+                                    }
+
+                                    return (
+                                        <TableRow key={bill.id}>
+                                            <TableCell className="font-medium">{bill.name}</TableCell>
+                                            <TableCell>{dueDateText}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(bill.amount, currency)}</TableCell>
+                                        </TableRow>
+                                    );
+                                }) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="h-24 text-center">
+                                            No upcoming bills.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                     </div>
+                      <div className="md:hidden space-y-4">
+                        {upcomingBills && upcomingBills.length > 0 ? upcomingBills.map((bill) => {
+                            const dueDate = parseISO(bill.dueDate);
+                            const daysUntilDue = differenceInDays(dueDate, new Date());
+                            const isOverdue = daysUntilDue < 0;
+
+                            let dueDateText;
+                            if (isOverdue) {
+                                dueDateText = <span className="text-sm text-destructive">{Math.abs(daysUntilDue)} days overdue</span>;
+                            } else if (daysUntilDue === 0) {
+                                dueDateText = <span className="text-sm text-muted-foreground">Due today</span>;
+                            } else {
+                                dueDateText = <span className="text-sm text-muted-foreground">{daysUntilDue} days left</span>;
+                            }
+
+                            return (
+                                <div key={bill.id} className="flex items-center justify-between">
+                                    <div className="grid gap-1">
+                                        <p className="font-medium">{bill.name}</p>
+                                        {dueDateText}
+                                    </div>
+                                    <p className="font-medium">{formatCurrency(bill.amount, currency)}</p>
+                                </div>
+                            );
+                        }) : (
+                             <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+                                No upcoming bills.
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 

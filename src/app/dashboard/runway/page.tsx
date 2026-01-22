@@ -14,6 +14,24 @@ import type { IncomeStream, Bill, Expense, Asset } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
+
+const MobileIncomeCardSkeleton = () => (
+    <Card>
+        <CardContent className="p-4">
+            <div className="flex justify-between items-start gap-4">
+                <div className="grid gap-1.5 flex-1">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                </div>
+                <div className="grid gap-1.5 items-end text-right">
+                    <Skeleton className="h-5 w-20 ml-auto" />
+                     <Skeleton className="h-4 w-8" />
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+);
 
 export default function RunwayPage() {
   const { user, userProfile, isUserLoading } = useUser();
@@ -98,42 +116,82 @@ export default function RunwayPage() {
             <Button asChild size="sm"><Link href="/dashboard/runway/income/add"><PlusCircle className="mr-2 h-4 w-4" />Add Income</Link></Button>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Schedule</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading && Array.from({length: 2}).map((_, i) => <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full"/></TableCell></TableRow>)}
+            {/* Mobile View */}
+            <div className="space-y-4 md:hidden">
+                {isLoading && Array.from({length: 2}).map((_, i) => <MobileIncomeCardSkeleton key={i} />)}
                 {!isLoading && incomeStreams?.map(stream => (
-                  <TableRow key={stream.id}>
-                    <TableCell className="font-medium">{stream.name}</TableCell>
-                    <TableCell>{stream.schedule}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(stream.amount, currency)}</TableCell>
-                    <TableCell>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href={`/dashboard/runway/income/edit/${stream.id}`}>
-                                        <Pencil className="mr-2 h-4 w-4"/> Edit
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(stream.id)} className="text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    <Card key={stream.id}>
+                        <CardContent className="p-4">
+                            <div className="flex justify-between items-start gap-4">
+                                <div className="grid gap-1">
+                                    <p className="font-semibold">{stream.name}</p>
+                                    <p className="text-sm text-muted-foreground">{stream.schedule}</p>
+                                </div>
+                                <div className="grid gap-1 text-right">
+                                    <p className="font-semibold">{formatCurrency(stream.amount, currency)}</p>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 p-0 ml-auto"><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem asChild>
+                                                <Link href={`/dashboard/runway/income/edit/${stream.id}`}>
+                                                    <Pencil className="mr-2 h-4 w-4"/> Edit
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDelete(stream.id)} className="text-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 ))}
-                 {!isLoading && incomeStreams?.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">No income streams added.</TableCell></TableRow>}
-              </TableBody>
-            </Table>
+                {!isLoading && incomeStreams?.length === 0 && (
+                    <div className="h-24 text-center flex items-center justify-center text-muted-foreground">
+                        No income streams added.
+                    </div>
+                )}
+            </div>
+            {/* Desktop View */}
+            <div className='hidden md:block'>
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Schedule</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {isLoading && Array.from({length: 2}).map((_, i) => <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full"/></TableCell></TableRow>)}
+                    {!isLoading && incomeStreams?.map(stream => (
+                    <TableRow key={stream.id}>
+                        <TableCell className="font-medium">{stream.name}</TableCell>
+                        <TableCell>{stream.schedule}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(stream.amount, currency)}</TableCell>
+                        <TableCell>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4"/></Button></DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem asChild>
+                                        <Link href={`/dashboard/runway/income/edit/${stream.id}`}>
+                                            <Pencil className="mr-2 h-4 w-4"/> Edit
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDelete(stream.id)} className="text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                    {!isLoading && incomeStreams?.length === 0 && <TableRow><TableCell colSpan={4} className="h-24 text-center">No income streams added.</TableCell></TableRow>}
+                </TableBody>
+                </Table>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -141,29 +199,20 @@ export default function RunwayPage() {
             <CardTitle>Expense Breakdown</CardTitle>
             <CardDescription>An overview of your estimated monthly costs.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Monthly Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Fixed Expenses (Bills)</TableCell>
-                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses, currency)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Variable Expenses (Avg.)</TableCell>
-                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyVariableExpenses, currency)}</TableCell>
-                </TableRow>
-                 <TableRow className="font-bold">
-                  <TableCell>Total Expenses</TableCell>
-                  <TableCell className="text-right">{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses + monthlyVariableExpenses, currency)}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+          <CardContent className="grid gap-4 text-sm">
+            <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Fixed Expenses (Bills)</span>
+                <span>{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyFixedExpenses, currency)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Variable Expenses (Avg.)</span>
+                <span>{isLoading ? <Skeleton className="h-5 w-20 ml-auto"/> : formatCurrency(monthlyVariableExpenses, currency)}</span>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between font-semibold">
+                <span>Total Monthly Expenses</span>
+                <span>{isLoading ? <Skeleton className="h-5 w-24 ml-auto"/> : formatCurrency(monthlyFixedExpenses + monthlyVariableExpenses, currency)}</span>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -73,6 +73,27 @@ function SnapshotForm({ onSubmit, isSubmitting }: { onSubmit: (values: SnapshotF
   );
 }
 
+const MobileAssetSkeleton = () => (
+    <Card>
+        <CardContent className="p-4">
+            <div className="flex justify-between items-start gap-4">
+                <div className="grid gap-1.5 flex-1">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-6 w-24" />
+                </div>
+                <div className="grid gap-1.5 items-end text-right">
+                    <Skeleton className="h-5 w-16 ml-auto" />
+                     <div className="flex items-center justify-end gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                    </div>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+);
+
+const MobileLiabilitySkeleton = MobileAssetSkeleton; // They have the same structure
 
 export default function NetWorthPage() {
   const { user, userProfile, isUserLoading } = useUser();
@@ -225,38 +246,64 @@ export default function NetWorthPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="text-right">Net Worth</TableHead>
-                        <TableHead className="w-[50px] text-right">Action</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {areNetWorthsLoading && Array.from({length: 3}).map((_,i) => (
-                        <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                <div className="hidden md:block">
+                  <Table>
+                      <TableHeader>
+                      <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead className="text-right">Net Worth</TableHead>
+                          <TableHead className="w-[50px] text-right">Action</TableHead>
+                      </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                      {areNetWorthsLoading && Array.from({length: 3}).map((_,i) => (
+                          <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                      ))}
+                      {!areNetWorthsLoading && netWorthHistoryDocs?.map(snapshot => {
+                          const netWorth = snapshot.assets - snapshot.liabilities;
+                          return (
+                          <TableRow key={snapshot.id}>
+                              <TableCell>{format(parseISO(snapshot.date), 'PPP')}</TableCell>
+                              <TableCell className="font-medium">{snapshot.name}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(netWorth, currency)}</TableCell>
+                              <TableCell className="text-right">
+                                  <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDeleteSnapshot(snapshot.id)}>
+                                      <Trash2 className="h-4 w-4" />
+                                      <span className="sr-only">Delete snapshot</span>
+                                  </Button>
+                              </TableCell>
+                          </TableRow>
+                          )
+                      })}
+                      {!areNetWorthsLoading && netWorthHistoryDocs?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No snapshots recorded yet.</TableCell></TableRow>}
+                      </TableBody>
+                  </Table>
+                </div>
+                <div className="md:hidden space-y-2">
+                   {areNetWorthsLoading && Array.from({length: 3}).map((_,i) => (
+                        <Skeleton key={i} className="h-12 w-full rounded-md" />
                     ))}
                     {!areNetWorthsLoading && netWorthHistoryDocs?.map(snapshot => {
                         const netWorth = snapshot.assets - snapshot.liabilities;
                         return (
-                        <TableRow key={snapshot.id}>
-                            <TableCell>{format(parseISO(snapshot.date), 'PPP')}</TableCell>
-                            <TableCell className="font-medium">{snapshot.name}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(netWorth, currency)}</TableCell>
-                            <TableCell className="text-right">
+                          <div key={snapshot.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
+                            <div className="grid gap-0.5">
+                              <p className="font-medium">{snapshot.name}</p>
+                              <p className="text-sm text-muted-foreground">{format(parseISO(snapshot.date), 'PPP')}</p>
+                            </div>
+                             <div className="flex items-center gap-2">
+                                <p className="font-medium">{formatCurrency(netWorth, currency)}</p>
                                 <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDeleteSnapshot(snapshot.id)}>
                                     <Trash2 className="h-4 w-4" />
                                     <span className="sr-only">Delete snapshot</span>
                                 </Button>
-                            </TableCell>
-                        </TableRow>
+                             </div>
+                          </div>
                         )
                     })}
-                    {!areNetWorthsLoading && netWorthHistoryDocs?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No snapshots recorded yet.</TableCell></TableRow>}
-                    </TableBody>
-                </Table>
+                     {!areNetWorthsLoading && netWorthHistoryDocs?.length === 0 && <div className="text-center h-24 flex items-center justify-center text-muted-foreground">No snapshots recorded yet.</div>}
+                </div>
                 </CardContent>
             </Card>
           </div>
@@ -273,43 +320,74 @@ export default function NetWorthPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                      <TableHead className="w-24 text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading && Array.from({length: 3}).map((_,i) => (
-                      <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
-                    ))}
-                    {!isLoading && assets?.map((asset: Asset) => (
-                      <TableRow key={asset.id}>
-                        <TableCell className="font-medium">{asset.name}</TableCell>
-                        <TableCell><Badge variant="outline">{asset.type}</Badge></TableCell>
-                        <TableCell className="text-right">{formatCurrency(asset.value, currency)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-2">
-                            <Button asChild variant="ghost" size="icon">
-                              <Link href={`/dashboard/net-worth/asset/edit/${asset.id}`}>
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Edit Asset</span>
-                              </Link>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAssetOrLiability('assets', asset.id)}>
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete Asset</span>
-                            </Button>
+                {/* Mobile view */}
+                <div className="md:hidden space-y-4">
+                  {isLoading && Array.from({length: 3}).map((_, i) => <MobileAssetSkeleton key={i} />)}
+                  {!isLoading && assets?.map((asset: Asset) => (
+                    <Card key={asset.id}>
+                      <CardContent className="p-4">
+                          <div className="flex justify-between items-start gap-4">
+                              <div className="grid gap-1.5 flex-1">
+                                  <p className="font-semibold">{asset.name}</p>
+                                  <Badge variant="outline">{asset.type}</Badge>
+                              </div>
+                              <div className="grid gap-1 items-end text-right">
+                                  <p className="font-semibold">{formatCurrency(asset.value, currency)}</p>
+                                  <div className="flex items-center justify-end gap-0.5">
+                                      <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                                          <Link href={`/dashboard/net-worth/asset/edit/${asset.id}`}><Pencil className="h-4 w-4" /></Link>
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDeleteAssetOrLiability('assets', asset.id)}>
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  </div>
+                              </div>
                           </div>
-                        </TableCell>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {!isLoading && assets?.length === 0 && <div className="text-center h-24 flex items-center justify-center text-muted-foreground">No assets added yet.</div>}
+                </div>
+                {/* Desktop view */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
+                        <TableHead className="w-24 text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                     {!isLoading && assets?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No assets added yet.</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading && Array.from({length: 3}).map((_,i) => (
+                        <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                      ))}
+                      {!isLoading && assets?.map((asset: Asset) => (
+                        <TableRow key={asset.id}>
+                          <TableCell className="font-medium">{asset.name}</TableCell>
+                          <TableCell><Badge variant="outline">{asset.type}</Badge></TableCell>
+                          <TableCell className="text-right">{formatCurrency(asset.value, currency)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end gap-2">
+                              <Button asChild variant="ghost" size="icon">
+                                <Link href={`/dashboard/net-worth/asset/edit/${asset.id}`}>
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit Asset</span>
+                                </Link>
+                              </Button>
+                              <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAssetOrLiability('assets', asset.id)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete Asset</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {!isLoading && assets?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No assets added yet.</TableCell></TableRow>}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -324,55 +402,98 @@ export default function NetWorthPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Value</TableHead>
-                       <TableHead className="w-24 text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                     {isLoading && Array.from({length: 2}).map((_,i) => (
-                      <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
-                    ))}
-                    {!isLoading && liabilities?.map((liability: Liability) => (
-                      <TableRow key={liability.id}>
-                        <TableCell className="font-medium flex items-center gap-2">
-                          {liability.name}
-                          {linkedBillIds.has(liability.id) && (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Link2 className="h-4 w-4 text-muted-foreground" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>A recurring bill is linked to this liability.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          </TableCell>
-                        <TableCell><Badge variant="outline">{liability.type}</Badge></TableCell>
-                        <TableCell className="text-right">{formatCurrency(liability.value, currency)}</TableCell>
-                         <TableCell>
-                          <div className="flex items-center justify-end gap-2">
-                              <Button asChild variant="ghost" size="icon">
-                                <Link href={`/dashboard/net-worth/liability/edit/${liability.id}`}>
-                                  <Pencil className="h-4 w-4" />
-                                  <span className="sr-only">Edit Liability</span>
-                                </Link>
-                              </Button>
-                              <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAssetOrLiability('liabilities', liability.id)}>
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete Liability</span>
-                              </Button>
-                            </div>
-                         </TableCell>
+                {/* Mobile View */}
+                 <div className="md:hidden space-y-4">
+                  {isLoading && Array.from({length: 2}).map((_, i) => <MobileLiabilitySkeleton key={i} />)}
+                  {!isLoading && liabilities?.map((liability: Liability) => (
+                    <Card key={liability.id}>
+                      <CardContent className="p-4">
+                          <div className="flex justify-between items-start gap-4">
+                              <div className="grid gap-1.5 flex-1">
+                                  <p className="font-semibold flex items-center gap-2">
+                                    {liability.name}
+                                    {linkedBillIds.has(liability.id) && (
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <Link2 className="h-4 w-4 text-muted-foreground" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>A recurring bill is linked to this liability.</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                  </p>
+                                  <Badge variant="outline">{liability.type}</Badge>
+                              </div>
+                              <div className="grid gap-1 items-end text-right">
+                                  <p className="font-semibold">{formatCurrency(liability.value, currency)}</p>
+                                  <div className="flex items-center justify-end gap-0.5">
+                                      <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                                          <Link href={`/dashboard/net-worth/liability/edit/${liability.id}`}><Pencil className="h-4 w-4" /></Link>
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => handleDeleteAssetOrLiability('liabilities', liability.id)}>
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  </div>
+                              </div>
+                          </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {!isLoading && liabilities?.length === 0 && <div className="text-center h-24 flex items-center justify-center text-muted-foreground">No liabilities added yet.</div>}
+                </div>
+                {/* Desktop View */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
+                        <TableHead className="w-24 text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                    {!isLoading && liabilities?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No liabilities added yet.</TableCell></TableRow>}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading && Array.from({length: 2}).map((_,i) => (
+                        <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                      ))}
+                      {!isLoading && liabilities?.map((liability: Liability) => (
+                        <TableRow key={liability.id}>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            {liability.name}
+                            {linkedBillIds.has(liability.id) && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Link2 className="h-4 w-4 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>A recurring bill is linked to this liability.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                            </TableCell>
+                          <TableCell><Badge variant="outline">{liability.type}</Badge></TableCell>
+                          <TableCell className="text-right">{formatCurrency(liability.value, currency)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-end gap-2">
+                                <Button asChild variant="ghost" size="icon">
+                                  <Link href={`/dashboard/net-worth/liability/edit/${liability.id}`}>
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="sr-only">Edit Liability</span>
+                                  </Link>
+                                </Button>
+                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteAssetOrLiability('liabilities', liability.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete Liability</span>
+                                </Button>
+                              </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {!isLoading && liabilities?.length === 0 && <TableRow><TableCell colSpan={4} className="text-center h-24">No liabilities added yet.</TableCell></TableRow>}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </div>
