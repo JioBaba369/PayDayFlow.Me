@@ -2,22 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  PiggyBank,
-  Receipt,
-  Target,
-  CreditCard,
-} from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/bills', icon: Receipt, label: 'Bills' },
-  { href: '/dashboard/expenses', icon: CreditCard, label: 'Expenses' },
-  { href: '/dashboard/budget', icon: PiggyBank, label: 'Budget' },
-  { href: '/dashboard/savings', icon: Target, label: 'Savings' },
-];
+import { bottomNavLinks } from '@/lib/nav-config';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -26,7 +12,7 @@ export function BottomNav() {
     <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-card border-t z-50">
       <nav className="h-full">
         <ul className="h-full grid grid-cols-5 items-center">
-          {navItems.map((item) => (
+          {bottomNavLinks.map((item) => (
             <li key={item.href} className="h-full">
               <Link
                 href={item.href}

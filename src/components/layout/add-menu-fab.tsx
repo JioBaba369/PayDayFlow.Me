@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { addMenuItems } from '@/lib/nav-config';
 
 export function AddMenuFab() {
   return (
@@ -25,27 +26,11 @@ export function AddMenuFab() {
         <DropdownMenuContent align="end" side="top" className="w-56 mb-2">
             <DropdownMenuLabel>Quick Add</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/expenses/add">Add Expense</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/bills/add">Add Bill</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/budget/add">Add Budget</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/savings/add">Add Savings Goal</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/net-worth/asset/add">Add Asset</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/net-worth/liability/add">Add Liability</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/runway/income/add">Add Income</Link>
-            </DropdownMenuItem>
+            {addMenuItems.map((item) => (
+              <DropdownMenuItem key={item.href} asChild>
+                <Link href={item.href}>{item.label}</Link>
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

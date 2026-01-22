@@ -2,18 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import {
-  LayoutDashboard,
-  PiggyBank,
-  Receipt,
-  Target,
-  TrendingUp,
-  Plane,
-  Sparkles,
-  User,
-  Settings,
-  CreditCard,
-} from 'lucide-react';
+import { sidebarNavLinks } from '@/lib/nav-config';
 
 import {
   SidebarMenu,
@@ -21,24 +10,12 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/budget', icon: PiggyBank, label: 'Budget' },
-  { href: '/dashboard/bills', icon: Receipt, label: 'Bills' },
-  { href: '/dashboard/expenses', icon: CreditCard, label: 'Expenses' },
-  { href: '/dashboard/savings', icon: Target, label: 'Savings' },
-  { href: '/dashboard/net-worth', icon: TrendingUp, label: 'Net Worth' },
-  { href: '/dashboard/runway', icon: Plane, label: 'Runway' },
-  { href: '/dashboard/profile', icon: User, label: 'Profile' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
-];
-
 export function SidebarNav() {
   const pathname = usePathname();
 
   return (
     <SidebarMenu>
-      {navItems.map((item) => (
+      {sidebarNavLinks.map((item) => (
         <SidebarMenuItem key={item.href}>
           <Link href={item.href}>
             <SidebarMenuButton
