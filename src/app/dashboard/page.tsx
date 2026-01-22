@@ -21,11 +21,19 @@ import { differenceInDays, parseISO, startOfMonth, format } from 'date-fns';
 import { DollarSign, Wallet, Calendar, TrendingUp, PlusCircle, ArrowUpRight, TrendingDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategoryIcon } from '@/components/dashboard/category-icon';
+import { Separator } from '@/components/ui/separator';
 
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-        <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
+          <div className="flex items-center gap-4 text-sm">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-6 w-px bg-border" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Skeleton className="h-28 rounded-lg" />
             <Skeleton className="h-28 rounded-lg" />
@@ -158,7 +166,20 @@ export default function DashboardPage() {
   // --- RENDER ---
   return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <h1 className="text-2xl font-bold font-headline tracking-tight">Confidence Dashboard</h1>
+            <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Monthly Income:</span>
+                    <span className="font-semibold">{formatCurrency(totalMonthlyIncome, currency)}</span>
+                </div>
+                <Separator orientation="vertical" className="h-6" />
+                <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Cash on Hand:</span>
+                    <span className="font-semibold">{formatCurrency(cashLeft, currency)}</span>
+                </div>
+            </div>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard title="Cash on Hand" value={formatCurrency(cashLeft, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} description="Across all cash accounts" />
